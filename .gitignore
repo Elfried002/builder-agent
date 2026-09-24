@@ -1,0 +1,32 @@
+# Secrets et fichiers locaux — ne jamais committer
+.env
+.env.*
+!.env.example
+*.token
+*.key
+*.pem
+*.p12
+*.pfx
+registration.key
+agent.token
+
+# Journalisation et caches locaux
+*.log
+logs/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Éditeurs et systèmes
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Sorties de vérification
+verif/
+*.out.json
