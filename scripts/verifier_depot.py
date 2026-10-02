@@ -8,7 +8,7 @@ Verifie, sans reseau et sans secret :
   2. le prompt systeme pointe par `system_prompt_file` (existe, taille, sections obligatoires) ;
   3. la liste `skills.retenues` face aux competences presentes dans `skills/` ;
   4. chaque competence : `SKILL.md` avec frontmatter `name` / `description` ;
-  5. les outils declares face a la liste blanche des orchestrateurs connus (filtrage silencieux) ;
+  5. les outils declares face a la liste blanche du runtime (tout nom inconnu est ignore) ;
   6. la gouvernance : permissions, Human Gate, interdits ;
   7. l'absence de secret en clair dans les fichiers versionnes.
 
@@ -25,7 +25,7 @@ import re
 import sys
 from pathlib import Path
 
-# Liste blanche des outils de la console Agent OS (lib/tools.ts : TOOL_DEFS / TOOL_NAMES).
+# Liste blanche des outils du runtime : tout nom absent est ignore en silence.
 # Tout nom absent de cette liste est supprime en silence cote serveur.
 OUTILS_CONNUS = {
     "http_request",

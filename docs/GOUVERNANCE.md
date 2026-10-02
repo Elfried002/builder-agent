@@ -30,7 +30,7 @@ pas pour une catégorie d'actions.
 6. Ambiguïté critique : plusieurs interprétations changent fortement le résultat.
 7. Conflit entre exigence métier et politique de sécurité.
 
-**Mode autonome** (déclenchement par orchestrateur, agent ou job, sans humain disponible) :
+**Mode autonome** (déclenchement par un job planifié, un appel d'outil ou un autre agent, sans humain disponible) :
 analyser le contexte, retenir l'hypothèse de périmètre **la moins risquée**, la documenter,
 n'inventer aucun résultat, produire le livrable quand les conditions sont réunies, consigner
 les points ouverts, retourner un statut final. **Les actions relevant du Human Gate restent en

@@ -3,6 +3,26 @@
 Toutes les modifications notables de Builder Agent sont consignées ici.
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · versionnage sémantique.
 
+## [3.1.0] — 2026-10-02
+
+### Modifié
+- **CodiDev devient un agent indépendant.** Détaché de l'orchestrateur multi-agents : plus
+  aucune inscription, plus aucun heartbeat, aucune identité de plateforme. Le script
+  `scripts/inscrire_orchestrateur.py` est retiré du dépôt ; les artefacts de la période
+  « orchestrateur » sont archivés sous `archive/orchestrateur/` ; les ponts optionnels vers une
+  console d'administration locale sont déplacés sous `integrations/agent-os/`, explicitement
+  **hors définition de l'agent**.
+- Déconnexion **prouvée** : tâche planifiée de heartbeat supprimée, amorces de heartbeat
+  supprimées, identifiants mis en quarantaine **hors du dépôt**, constat serveur `OFFLINE`
+  après arrêt des émissions. La révocation définitive de l'identité de plateforme relève d'une
+  session d'administration (le jeton d'agent répond `401`).
+
+### Ajouté
+- `INTERFACE_WEB.md` — spécification produit de l'interface web : écrans, modèle de données,
+  vocabulaire de statuts, direction visuelle, critères d'acceptation.
+- `PROMPT_LOVABLE.md` — prompt prêt à coller pour construire cette interface avec Lovable, et
+  consignes de relecture après la première génération.
+
 ## [3.0.0] — 2026-10-02
 
 ### Modifié

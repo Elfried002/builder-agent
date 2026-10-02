@@ -4,7 +4,7 @@ Document de référence : ce qu'est l'agent, ce qu'il sait faire, comment il est
 tourne et ce qui a été **vérifié** (par opposition à ce qui est seulement déclaré). Il complète
 le [`README.md`](README.md) (présentation et démarrage rapide) et les documents de `docs/`.
 
-Dernière mise à jour : 2026-10-02 — **CodiDev v3.0.0** · état vérifié sur `https://api.cvlynk.com`.
+Dernière mise à jour : 2026-10-02 — **CodiDev v3.1.0**, agent indépendant (aucune plateforme).
 
 ---
 
@@ -16,8 +16,7 @@ Dernière mise à jour : 2026-10-02 — **CodiDev v3.0.0** · état vérifié su
 | Spécialité (routage) | `builder` |
 | Rôle | Senior Full-Stack Engineer + Software Architect + DevSecOps Engineer |
 | Runtime | Hermes |
-| Instance locale | `hermes-codidev-01` |
-| `agent_id` plateforme | `agt_ff4e15a6d9524dfc` (attribué par l'orchestrateur, le 2026-10-02) |
+| Exécution | locale dans Hermes · agent **indépendant** (aucune plateforme) |
 | Modèle | `deepseek-chat` (`https://api.deepseek.com/v1`) — température `0.2`, `max_turns` `24` |
 | Outils | `http_request`, `current_time`, `memory_write`, `memory_read`, `web_search` (5) |
 | Langue | français par défaut ; anglais si la demande ou le projet l'exige |
@@ -25,9 +24,9 @@ Dernière mise à jour : 2026-10-02 — **CodiDev v3.0.0** · état vérifié su
 | Compétences normatives | **15** (catalogue ECC `affaan-m/ECC@bf70150`) |
 | Licence | MIT |
 
-L'identité (`agent_id`, nom définitif, rôle, statut) est **attribuée par l'orchestrateur** :
-l'agent la déclare, ne la choisit pas et ne l'usurpe jamais. Le nom peut être suffixé par le
-serveur (`CodiDev (2)`) s'il est déjà pris.
+CodiDev est un agent **indépendant** : aucune plateforme ne lui attribue d'identité, de nom ni de
+rôle. Son identification est celle de sa définition (`codidev`), versionnée dans ce dépôt ; les
+identités de plateforme d'une période antérieure sont archivées sous `archive/orchestrateur/`.
 
 ## 2. Mission
 
@@ -47,7 +46,7 @@ Trois règles de vérité structurent tout son travail :
 
 **19 capacités déclarées** (comptées, pas estimées — `docs/CAPACITES.md` les met en regard des
 compétences et des preuves attendues). Elles servent de base au routage des tâches par
-l'orchestrateur.
+son périmètre.
 
 ### Spécialité 1 — Full-Stack Engineering (9)
 `full-stack engineering` · `advanced programming` · `frontend patterns` · `react performance` ·
@@ -179,11 +178,11 @@ prompt système      agent/codidev.prompt.md (rôle, workflow, contraintes, sort
 bibliothèque        skills/<compétence>/SKILL.md  (15 textes complets, versionnés)
         │
         ▼
-orchestrateur ──► exécution ──► TASK REPORT
+exécution locale (Hermes) ──► rapport de tâche
 ```
 
 Trois couches distinctes : **profil** = ce qui est branché ; **prompt** = ce que l'agent est ;
-**bibliothèque** = la norme technique. Les orchestrateurs n'ayant pas de chargeur de
+**bibliothèque** = la norme technique. Le runtime n'ayant pas de chargeur de
 compétences, le prompt porte un digest (6–8 Ko) et les textes complets restent dans le dépôt —
 y coller 180 Ko pousserait dehors les instructions de gouvernance, qui disparaissent les
 premières.
@@ -195,7 +194,6 @@ premières.
 | `scripts/verifier_depot.py` | préflight : profil, compétences profil↔disque, outils en liste blanche, sections du prompt, **aucun secret** |
 | `scripts/enregistrer_agent_os.py` | enregistrement sur une console Agent OS (`POST /api/agents`), avec `--dry-run` |
 | `scripts/verifier_agent_os.py` | vérification par relecture + **exécution de contrôle** |
-| `scripts/inscrire_orchestrateur.py` | inscription sur un orchestrateur multi-agents (capacités dérivées du profil) |
 
 Doctrine d'exploitation : **préflight → enregistrement → vérification par relecture →
 exécution de contrôle**. Un `201` ne prouve rien ; un `200` non plus (un corps `status:
@@ -212,25 +210,21 @@ l'environnement ou un fichier **hors du dépôt** et n'impriment qu'un indicateu
 jamais une valeur (ni même un suffixe). Le `.gitignore` exclut `.env`, `.env.*`, `*.token`,
 `*.key`, `*.pem`, et `verifier_depot.py` échoue si un secret est détecté.
 
-## 11. État vérifié sur l'orchestrateur (2026-09-30)
+## 11. État d'exécution locale (2026-10-02)
+
+CodiDev est **indépendant** : aucune inscription, aucun heartbeat, aucune identité de
+plateforme. Ce qui est vérifié ici est reproductible hors ligne, par n'importe qui :
 
 | Élément | Valeur mesurée |
 |---|---|
-| Orchestrateur | `https://api.cvlynk.com` (`/health` → `ok`, service `multi-agent-orchestrator` v1.0.0) |
-| `agent_id` | `agt_ff4e15a6d9524dfc` |
-| Nom attribué par le serveur | CodiDev |
-| Rôle attribué par le serveur | `builder` |
-| Enregistré le | 2026-10-02T12:04:45Z |
-| Capacités déclarées | 19 (alignées sur le profil) |
-| Statut | **ONLINE** — vérifié par échantillonnage : 5/5 `GET /api/v1/agents/me`, `last_seen_at` progressant sans intervention (12:06:10 → 12:07:34 UTC) |
-| Maintien en ligne | tâche planifiée toutes les minutes, 8 battements sur ~80 s (seuil serveur d'inactivité : 60 s) |
-| Secrets | `ORCHESTRATOR_REGISTRATION_KEY`, `ORCHESTRATOR_API_KEY`, `ORCHESTRATOR_AGENT_TOKEN` dans un `.env` **hors du dépôt** |
+| Suite de tests | `python -m unittest discover -s tests -v` → 11 tests, 0 échec |
+| Contrôle du dépôt | `python scripts/verifier_depot.py` → 15/15 contrôles verts, 0 secret |
+| Test d'exécution réelle | `codidev_real_execution_test.txt` présent (`test -f`, `ls -lh`, `stat`) |
+| Outils constatés disponibles | python 3.14.7 · git 2.53.0 · docker 29.7.2 · node v26.7.0 · npm 11.19.0 |
+| Secrets | aucun dans le dépôt ; les identifiants vivent hors du dépôt et ne sont jamais affichés |
+| Interface web | spécification `INTERFACE_WEB.md`, prompt de construction `PROMPT_LOVABLE.md` |
+| Période « orchestrateur » | **terminée** — artefacts archivés sous `archive/orchestrateur/` |
 
-Fait daté à retenir : la chaîne des identités est **agt_5a0af0d2ce044545** (2026-09-24, Builder
-Agent, caduque) → **agt_b73d0513a3f346b2** (2026-09-30, Builder Agent, remplacée par le
-renommage) → **agt_ff4e15a6d9524dfc** (2026-10-02, CodiDev, identité courante). Un jeton d'agent
-n'est jamais récupérable : il se renouvelle par un réenregistrement, et une identité ancienne
-ne se réutilise pas.
 
 ## 12. Ce que l'agent n'est pas
 
@@ -246,7 +240,9 @@ codidev/
 ├── agent/            profil exécutable + prompt système (source de vérité de l'agent)
 ├── skills/           15 compétences normatives (textes complets) + index et provenance
 ├── docs/             ARCHITECTURE · CAPACITES · GOUVERNANCE · EXPLOITATION
-├── scripts/          verifier_depot · enregistrer_agent_os · verifier_agent_os · inscrire_orchestrateur
+├── scripts/          verifier_depot (contrôle du dépôt)
+├── integrations/     ponts optionnels (agent-os)
+├── archive/          artefacts historiques (hors service)
 ├── DESCRIPTION.md    ce document
 ├── CHANGELOG.md
 ├── LICENSE           MIT
@@ -261,12 +257,8 @@ codidev/
 
 ## 15. Points ouverts
 
-- **Anciennes identités côté orchestrateur** (`agt_5a0af0d2ce044545`, `agt_b73d0513a3f346b2`) :
-  elles ne sont plus alimentées par un heartbeat. Leur révocation est une **action
-  d'administration** (indisponible avec le seul jeton d'agent) — à faire depuis le tableau de
-  bord si l'on veut un registre propre.
-- Rappel de contrat : une clé d'enregistrement n'ouvre **que** `/enroll` — toute validation par
-  une route de lecture produit un faux `401`.
-- Le dépôt Git **et** le nom du dépôt GitHub sont désormais `codidev`
-  (`https://github.com/Elfried002/codidev`) ; l'ancienne URL `builder-agent` redirige. Pour un
-  clone existant : `git remote set-url origin https://github.com/Elfried002/codidev.git`.
+- **Aucun blocage.** CodiDev s'exécute localement et se vérifie hors ligne ; rien n'attend une
+  plateforme.
+- La spécification `INTERFACE_WEB.md` attend son implémentation (prompt prêt : `PROMPT_LOVABLE.md`).
+- Régression à surveiller : qu'aucun nom de plateforme ne revienne dans les fichiers actifs —
+  c'est désormais contrôlé par la suite de tests (`tests/test_definition.py`).

@@ -17,7 +17,7 @@ Spécification de l'agent
         bibliothèque de compétences   skills/<compétence>/SKILL.md   (textes complets, chargés à la demande)
                     │
                     ▼
-        orchestrateur (Agent OS / orchestrateur multi-agents) ──► exécution ──► TASK REPORT
+        exécution locale (Hermes)                    ──► TASK REPORT
 ```
 
 Trois couches, chacune avec un rôle distinct :
@@ -32,7 +32,7 @@ Trois couches, chacune avec un rôle distinct :
 
 ## 2. Pourquoi les compétences ne sont pas dans le prompt
 
-Les orchestrateurs d'agents n'ont en général **pas de chargeur de compétences** : au mieux un
+Le runtime n'a en général **pas de chargeur de compétences** : au mieux un
 prompt système, une mémoire et une liste d'outils. Deux chemins sont donc utilisés ensemble :
 
 - un **digest normatif** dans le prompt système (règles applicables en quelques lignes :
@@ -48,7 +48,7 @@ y coller 180 Ko ne l'est pas — cela pousse **dehors** les instructions de gouv
 
 ## 3. Chaîne d'exécution
 
-1. L'orchestrateur résout le profil, charge le prompt système, expose la liste d'outils.
+1. Le runtime résout le profil, charge le prompt système, expose la liste d'outils.
 2. Le serveur **filtre les outils** contre sa propre liste blanche : tout nom inconnu est
    supprimé **en silence**. Le profil ne doit donc déclarer que des outils réellement exposés
    (`scripts/verifier_depot.py` contrôle ce point).
@@ -64,22 +64,19 @@ y coller 180 Ko ne l'est pas — cela pousse **dehors** les instructions de gouv
 | Compétences normatives | `skills/` — versionnées, textes complets |
 | Gouvernance | `agent/codidev.json` (machine) + `docs/GOUVERNANCE.md` (lisible) |
 | Secrets (jeton admin, clé d'enregistrement, jeton d'agent, clé LLM) | **hors du dépôt** — environnement ou `.env.local` |
-| Identité attribuée par la plateforme (`agent_id`, instance) | côté plateforme ; recopiée en documentation seulement |
+| Identité | celle de la définition (`codidev`) — agent indépendant, aucune plateforme |
 
-## 5. Déploiement sur un orchestrateur
+## 5. Exécution locale et intégrations optionnelles
 
-Deux contrats sont supportés par les scripts de ce dépôt :
+CodiDev s'exécute **localement** (runtime Hermes) à partir de sa seule définition : profil,
+prompt système, bibliothèque de compétences, gouvernance. Aucune inscription, aucun heartbeat,
+aucune identité de plateforme n'est requis pour l'exécuter.
 
-- **Console Agent OS** (Next.js) — `POST /api/agents` avec `Authorization: Bearer <ADMIN_TOKEN>`
-  et les champs `name`, `description`, `system_prompt`, `objective`, `model`, `base_url`,
-  `temperature`, `max_turns`, `tools`, `schedule`, `enabled` → `scripts/enregistrer_agent_os.py`.
-- **Orchestrateur multi-agents exposé en API (contrat vérifié)** —
-  `POST /api/v1/agents/enroll` avec `Authorization: Bearer <clé d'enregistrement>` et le corps
-  `{runtime, client_instance_id, requested_name, capabilities[], version, declared_role?}` →
-  `scripts/inscrire_orchestrateur.py`. Réponses traitées explicitement : `401` clé refusée,
-  `409` identité déjà enregistrée, `429` quota, `503` orchestrateur hors ligne. **La clé
-  n'ouvre que `/enroll`** : une route de lecture exige un jeton d'agent et ne prouve rien de sa
-  validité.
+| Chemin | Contenu |
+|---|---|
+| `scripts/verifier_depot.py` | préflight local : profil, prompt, compétences, outils, absence de secret |
+| `integrations/agent-os/` | **optionnel** : publication de la fiche sur une console d'administration locale |
+| `archive/orchestrateur/` | artefacts historiques d'une période révolue (aucun dispositif en service) |
 
-Dans les deux cas, **la vérification se fait par relecture**, jamais par le code HTTP de la
+Dans tous les cas, **la vérification se fait par relecture**, jamais par le code HTTP d'une
 réponse d'écriture. Détails et pièges : [`EXPLOITATION.md`](EXPLOITATION.md).

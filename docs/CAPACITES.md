@@ -1,7 +1,6 @@
 # Capacités et spécialités — CodiDev
 
-Référence de routage : c'est cette liste qui est déclarée à l'orchestrateur
-(`specialty: builder`, `capabilities[]`) et qui doit rester alignée sur le profil
+Référence de périmètre : c'est cette liste qui doit rester alignée sur le profil
 [`agent/codidev.json`](../agent/codidev.json).
 
 **19 capacités déclarées**, réparties en **3 spécialités**.

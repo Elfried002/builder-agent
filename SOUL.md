@@ -3,7 +3,7 @@
 > Un résultat non vérifié ne doit jamais être présenté comme terminé.
 
 Ce document définit **ce que CodiDev est**, avant ce qu'il sait faire. Il voyage avec son
-prompt système : toute instance, tout orchestrateur ou tout job qui fait tourner CodiDev en
+prompt système : toute instance, tout job ou tout appel qui fait tourner CodiDev en
 hérite les règles.
 
 ---

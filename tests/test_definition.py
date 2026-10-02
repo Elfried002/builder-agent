@@ -35,8 +35,8 @@ FICHIERS_OBLIGATOIRES = (
     "README.md", "DESCRIPTION.md", "AGENT_SPEC.md", "SOUL.md", "SKILL.md", "CHANGELOG.md",
     "LICENSE", "docs/ARCHITECTURE.md", "docs/CAPACITES.md", "docs/GOUVERNANCE.md",
     "docs/EXPLOITATION.md", "skills/README.md", "memory/README.md", "memory/MEMORY.md",
-    "scripts/verifier_depot.py", "scripts/inscrire_orchestrateur.py",
-    "scripts/enregistrer_agent_os.py", "scripts/verifier_agent_os.py",
+    "workspace/README.md", "scripts/verifier_depot.py", "INTERFACE_WEB.md", "PROMPT_LOVABLE.md",
+    "archive/orchestrateur/README.md", "integrations/agent-os/README.md"
 )
 
 
@@ -127,6 +127,42 @@ class TestDocumentsEtSecurite(unittest.TestCase):
         contenu = (RACINE / ".gitignore").read_text(encoding="utf-8")
         for motif in (".env", "*.token", "*.key"):
             self.assertIn(motif, contenu)
+
+
+class TestIndependance(unittest.TestCase):
+    """CodiDev est un agent indépendant : plus aucun couplage à une plateforme."""
+
+    ACTIFS = (
+        "README.md", "DESCRIPTION.md", "AGENT_SPEC.md", "SOUL.md", "SKILL.md",
+        "agent/codidev.json", "agent/codidev.prompt.md",
+        "docs/ARCHITECTURE.md", "docs/CAPACITES.md", "docs/GOUVERNANCE.md",
+        "docs/EXPLOITATION.md",
+    )
+    INTERDITS = ("cvlynk", "inscrire_orchestrateur", "agent_id plateforme", "ORCHESTRATOR_REGISTRATION_KEY")
+
+    def test_aucune_reference_de_plateforme_dans_les_fichiers_actifs(self):
+        trouves = []
+        for nom in self.ACTIFS:
+            texte = (RACINE / nom).read_text(encoding="utf-8")
+            for motif in self.INTERDITS:
+                if motif.lower() in texte.lower():
+                    trouves.append(f"{nom} :: {motif}")
+        self.assertEqual(trouves, [], f"référence de plateforme dans un fichier actif : {trouves}")
+
+    def test_script_dinscription_retire_du_depot(self):
+        self.assertFalse((RACINE / "scripts" / "inscrire_orchestrateur.py").exists())
+
+    def test_artefacts_plateforme_archives(self):
+        for relatif in ("archive/orchestrateur/README.md",
+                        "archive/orchestrateur/evidence-orchestrateur.json",
+                        "integrations/agent-os/README.md"):
+            self.assertTrue((RACINE / relatif).is_file(), f"attendu : {relatif}")
+
+    def test_interface_web_specifiee(self):
+        specification = (RACINE / "INTERFACE_WEB.md").read_text(encoding="utf-8")
+        self.assertIn("NOT_EXECUTED", specification, "le vocabulaire de statuts doit être spécifié")
+        prompt = (RACINE / "PROMPT_LOVABLE.md").read_text(encoding="utf-8")
+        self.assertIn("INTERFACE_WEB.md", prompt, "le prompt doit renvoyer à la spécification")
 
 
 if __name__ == "__main__":

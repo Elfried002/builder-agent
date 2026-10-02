@@ -27,7 +27,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-RACINE = Path(__file__).resolve().parent.parent
+RACINE = Path(__file__).resolve().parent.parent.parent
 VARIABLES_JETON = ("AGENT_OS_ADMIN_TOKEN", "ADMIN_TOKEN")
 OBJECTIF_INERTE = (
     "Reponds uniquement par le texte READY-OK. N'ecris aucun fichier, n'appelle aucun service, "

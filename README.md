@@ -5,7 +5,7 @@ Conception, développement, sécurisation, test, correction et évolution de log
 
 Ce dépôt est la **source de vérité** de l'agent : sa définition exécutable (profil + prompt
 système), sa bibliothèque de compétences normative, sa gouvernance, et les scripts
-d'enregistrement / vérification sur un orchestrateur.
+d'exécution locale dans Hermes — CodiDev est un agent **indépendant**.
 
 - Dépôt : `https://github.com/Elfried002/codidev` (l'ancienne URL `builder-agent` redirige ;
   pour un clone existant : `git remote set-url origin https://github.com/Elfried002/codidev.git`)
@@ -23,15 +23,15 @@ d'enregistrement / vérification sur un orchestrateur.
 | Spécialité (routage) | `builder` |
 | Rôle | Senior Full-Stack Engineer + Software Architect + DevSecOps Engineer |
 | Runtime | Hermes |
-| Instance | `hermes-codidev-01` |
-| `agent_id` plateforme | `agt_ff4e15a6d9524dfc` (attribué par l'orchestrateur, 2026-10-02) |
+| Exécution | locale dans Hermes · agent **indépendant** (aucune plateforme) |
 | Modèle | `deepseek-chat` (api.deepseek.com/v1) — température `0.2`, `max_turns` `24` |
 | Outils | `http_request`, `web_search`, `memory_write`, `memory_read`, `current_time` |
 | Langue | Français par défaut ; anglais si la demande ou le projet l'exige |
 | Compétences | 15 compétences normatives (catalogue ECC, `affaan-m/ECC@bf70150`) |
 
-L'identité d'agent (`agent_id`, instance) est attribuée par l'orchestrateur : elle n'est pas
-choisie par l'agent et ne doit jamais être usurpée.
+CodiDev est un agent **indépendant** : aucune plateforme ne lui attribue d'identité. Son identité est
+celle de sa définition (`codidev`), versionnée dans ce dépôt — elle ne s'usurpe jamais, et aucune
+identité de plateforme n'est requise pour l'exécuter.
 
 ## 2. Mission
 
@@ -42,7 +42,7 @@ choisie par l'agent et ne doit jamais être usurpée.
 ## 3. Spécialités et capacités
 
 Trois spécialités structurent l'agent ; **dix-neuf capacités déclarées** en découlent et servent
-de base au routage des tâches par l'orchestrateur.
+de base à la description de son périmètre.
 
 ### Spécialité 1 — Full-Stack Engineering
 `full-stack engineering` · `advanced programming` · `frontend patterns` · `react performance` ·
@@ -124,10 +124,11 @@ codidev/
 │   ├── GOUVERNANCE.md              # permissions, Human Gate, interdits, politique mémoire
 │   └── EXPLOITATION.md             # enregistrement, vérification, pièges, dépannage
 ├── scripts/
-│   ├── enregistrer_agent_os.py     # POST /api/agents sur une console Agent OS
-│   ├── verifier_agent_os.py        # relecture de la fiche + exécution de contrôle
-│   ├── inscrire_orchestrateur.py   # inscription (métadonnées) sur un orchestrateur multi-agents
 │   └── verifier_depot.py           # cohérence du dépôt + scan de secrets
+├── integrations/agent-os/          # ponts optionnels (hors définition de l'agent)
+├── archive/orchestrateur/          # artefacts historiques, hors service
+├── INTERFACE_WEB.md                # spécification de l'interface web
+├── PROMPT_LOVABLE.md               # prompt prêt à coller (construction de l'interface)
 ├── CHANGELOG.md
 └── LICENSE
 ```

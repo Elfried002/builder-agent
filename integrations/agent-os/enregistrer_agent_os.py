@@ -29,7 +29,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-RACINE = Path(__file__).resolve().parent.parent
+RACINE = Path(__file__).resolve().parent.parent.parent
 VARIABLES_JETON = ("AGENT_OS_ADMIN_TOKEN", "ADMIN_TOKEN")
 
 
