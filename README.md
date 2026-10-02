@@ -6,6 +6,10 @@ apprendre de l'expérience validée.
 
 Boucle cœur : **Understand → Plan → Decide → Execute → Verify → Learn → Adapt → Improve**
 
+CodiDev est une **plateforme de développement logiciel agentique** : l'utilisateur décrit une
+application en langage naturel et pilote sa conception, sa génération, sa vérification, sa
+sécurisation et son déploiement.
+
 > ## ⚠️ Le cœur est en TypeScript / Node.js
 >
 > L'implémentation **officielle et supportée** du cœur est le paquet **TypeScript
@@ -36,7 +40,7 @@ codidev/
 ├── core/                    cœur TypeScript (implémentation officielle) — @codidev/core
 │   ├── src/                 modules du cœur
 │   ├── schemas/             13 contrats JSON Schema neutres et partagés
-│   ├── tests/               15 fichiers Vitest (244 tests)
+│   ├── tests/               16 fichiers Vitest (249 tests)
 │   ├── examples/            fixtures d'intégration (dont nextjs-integration/)
 │   └── tests/fixtures/      journaux écrits par l'implémentation Python, figés (parité)
 ├── legacy/agent-definition-v3/   archive historique, antérieure au cœur
@@ -55,7 +59,7 @@ export PATH="$HOME/.local/share/codidev/node/bin:$PATH"   # Node >= 22
 cd core
 npm install
 npm run build
-npm test           # 244 tests verts
+npm test           # 249 tests verts
 ```
 
 ```ts
@@ -132,14 +136,15 @@ Chaque brique suit : implémentation → tests → lint → vérification, puis 
 cd core && npm test
 ```
 
-**Résultat vérifié : 15 fichiers de tests, 244 tests, 242 verts.** Les tests couvrent les unités
+**Résultat vérifié : 16 fichiers de tests, 249 tests, 249 verts.** Les tests couvrent les unités
 (statuts, erreurs, journal, sécurité, moteurs), l'intégration (cycle complet, isolation tenant,
 secrets) et la **parité croisée** : un journal produit par l'implémentation TypeScript est relu et
 re-haché par l'implémentation Python historique, et inversement. Aucun test ne dépend d'un accès
 réseau ni d'une clé d'API — tous les appels LLM passent par le provider `mock`.
 
-`scripts/verify.sh` et `scripts/bootstrap_env.sh` concernent l'environnement **Python historique**
-(migration en cours) ; la vérification du cœur officiel est `npm run verify`.
+`scripts/verify.sh` et `scripts/bootstrap_env.sh` concernent le **cœur officiel
+TypeScript/Node.js** : ils vérifient le typage, le lint, les tests, la construction, les dépendances
+et l'unicité de l'implémentation.
 
 ## Exports du paquet
 
@@ -229,6 +234,24 @@ La fixture d'intégration vit dans [`core/examples/nextjs-integration/`](core/ex
 elle montre comment brancher le cœur dans un projet Next.js. Consultez son `README.md` — c'est la
 référence d'intégration. Le guide complet est [`docs/LOVABLE_INTEGRATION.md`](docs/LOVABLE_INTEGRATION.md).
 
+## Le flux DevSecOps visé
+
+CodiDev **n'est pas un simple générateur de code** : la sécurité avant production est une partie
+fondamentale du workflow, pas une étape optionnelle ajoutée après coup. Le pipeline cible est :
+
+```
+Demande utilisateur → CodiDev Core → Plan → Génération → Build → Tests → Analyse de sécurité
+→ Security Gate → Correction / Rescan → Approbation → Déploiement
+```
+
+C'est le **workflow visé de la plateforme** — aujourd'hui partiellement construit :
+
+- **Déjà présent dans le Core :** planification et décision tracées, politiques et permissions,
+  Human Gate, preuves et audit chaînés SHA-256, sécurité (détection de secrets, rapport, verdict de
+  gate `PASS`/`REVIEW`/`BLOCK`, exceptions revues).
+- **À venir (plateforme construite avec Lovable) :** génération de code, build, exécution des
+  tests, analyse de sécurité outillée, correction/rescan automatisés, approbation et déploiement.
+
 ## Limites (frontière de la phase actuelle)
 
 - **Aucune exécution.** `AgentCore.run()` prépare, vérifie et **gèle** une tâche ; il n'exécute
@@ -237,7 +260,8 @@ référence d'intégration. Le guide complet est [`docs/LOVABLE_INTEGRATION.md`]
 - **Aucune capacité factice.** Aucun module ne simule une capacité non implémentée.
 - **Execution Engine, Tool Router, Workspace, connecteurs, Memory/Learning/Skill Engine,
   Project/Git Engine, DevSecOps, plateforme :** phases suivantes — non commencées.
-- **Python :** en quarantaine, hors périmètre, en attente de suppression après parité démontrée.
+- **Python :** l'implémentation historique a été **retirée du dépôt** après démonstration de la
+  parité ; il n'existe plus de cœur Python.
 
 ## Statut du projet
 
@@ -249,9 +273,9 @@ référence d'intégration. Le guide complet est [`docs/LOVABLE_INTEGRATION.md`]
 | Sécurité : détection de secrets, gate, exceptions revues, adaptateurs | implémenté |
 | Context Engine, Planner, Decision Engine, Task Engine, Agent Core | implémenté |
 | Couche LLM (`LLMProvider`, DeepSeek, mock, routeur) | implémenté |
-| Tests | **244 tests verts** (15 fichiers) |
+| Tests | **249 tests verts** (16 fichiers) |
 | Fixture Next.js d'intégration | disponible — [`core/examples/nextjs-integration/`](core/examples/nextjs-integration/) |
-| Suppression du cœur Python | après parité démontrée |
+| Suppression du cœur Python | **faite** — parité démontrée (38/38 invariants) avant retrait |
 | Phases suivantes (exécution, outils, mémoire, apprentissage, plateforme) | **non commencées** |
 
 ## Documentation

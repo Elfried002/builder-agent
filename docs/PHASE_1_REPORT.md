@@ -1,5 +1,10 @@
 # CodiDev — Rapport de Phase 1 (Agent Core)
 
+> ⚠️ **RAPPORT HISTORIQUE.** Ce document décrit une étape passée de la construction du
+> cœur, à l'époque où l'implémentation de référence était en Python. Il ne décrit **pas**
+> l'état actuel : le CodiDev Core est aujourd'hui **TypeScript/Node.js** dans `core/`
+> (voir [ADR-0010](../adr/ADR-0010-migration-du-coeur-vers-typescript.md)).
+
 **Date :** 2026-10-02 (UTC) · **Branche :** `phase/00-foundation` (suite du travail) ·
 **Périmètre :** le cerveau de CodiDev, et lui seul
 **Statut :** livré et vérifié par exécution réelle — **aucun push effectué**

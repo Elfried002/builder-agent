@@ -58,7 +58,7 @@ async function collect(source: AsyncIterable<string>): Promise<string[]> {
 
 function recordEvidence(store: EvidenceStore, operation = 'vérification') {
   return store.record(operation, OperationStatus.Executed, {
-    actor: 'hermes',
+    actor: 'acteur-test',
     resource: 'src/codidev',
     commands: ['pytest -q'],
   });
@@ -66,7 +66,7 @@ function recordEvidence(store: EvidenceStore, operation = 'vérification') {
 
 function recordAudit(ledger: AuditLedger, action = 'scan') {
   return ledger.recordAction({
-    actor: 'hermes',
+    actor: 'acteur-test',
     action,
     resource: 'src/codidev',
     riskClass: RiskClass.Read,
@@ -264,7 +264,7 @@ describe('journal chaîné — audit', () => {
     const record = await ledger.append({
       seq: 999,
       timestamp: '2026-10-02T20:00:00Z',
-      actor: 'hermes',
+      actor: 'acteur-test',
       action: 'test',
       resource: 'dépôt',
       risk_class: 'READ',
@@ -320,7 +320,7 @@ describe('journal chaîné — audit', () => {
       ledger.append({
         seq: 0,
         timestamp: '2026-10-02T20:00:00Z',
-        actor: 'hermes',
+        actor: 'acteur-test',
         action: 'test',
         resource: 'dépôt',
         risk_class: 'TRES_RISQUE',
@@ -339,7 +339,7 @@ describe('journal chaîné — audit', () => {
     const token = `gh${'p_'}E1f2G3h4I5j6K7l8M9n0O1p2Q3r4S5t6U7v8`;
     const ledger = new AuditLedger(auditPath());
     const record = await ledger.recordAction({
-      actor: 'hermes',
+      actor: 'acteur-test',
       action: 'git push',
       resource: `https://${token}@github.com/Elfried002/codidev.git`,
       riskClass: RiskClass.ExternalSideEffect,

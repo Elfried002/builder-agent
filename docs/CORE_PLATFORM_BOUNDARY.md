@@ -11,15 +11,15 @@ ici.
 
 | Domaine | Composant | Emplacement |
 |---|---|---|
-| Coordination du cycle | Agent Core (`analyze` → `plan` → `decide` → tâche) | `core/src/codidev/agent/` |
-| Contexte | Context Engine : couches, provenance, confiance, isolation tenant | `core/src/codidev/context/` |
-| Planification | Planner : étapes ordonnées, risques, critères, rollback, révision | `core/src/codidev/planner/` |
-| Décision | Decision Engine : options, sélection tracée, politique, obligations | `core/src/codidev/decision/` |
-| Exécution des tâches | Task Engine : machine à états, transitions observables | `core/src/codidev/task/` |
-| Contrats | 13 JSON Schema, validateur hors ligne | `core/src/codidev/contracts/` |
-| Preuves | Journal chaîné, append-only, caviardé | `core/src/codidev/evidence/` |
-| Audit | Journal chaîné, séquencé | `core/src/codidev/audit/` |
-| Sécurité | Secrets, gate, adaptateurs SAST/SCA, exceptions revues | `core/src/codidev/security/` |
+| Coordination du cycle | Agent Core (`analyze` → `plan` → `decide` → tâche) | `core/src/agent/` |
+| Contexte | Context Engine : couches, provenance, confiance, isolation tenant | `core/src/context/` |
+| Planification | Planner : étapes ordonnées, risques, critères, rollback, révision | `core/src/planner/` |
+| Décision | Decision Engine : options, sélection tracée, politique, obligations | `core/src/decision/` |
+| Exécution des tâches | Task Engine : machine à états, transitions observables | `core/src/task/` |
+| Contrats | 13 JSON Schema, validateur hors ligne | `core/schemas/` (13 contrats neutres) et `core/src/contracts.ts` |
+| Preuves | Journal chaîné, append-only, caviardé | `core/src/evidence.ts` |
+| Audit | Journal chaîné, séquencé | `core/src/audit.ts` |
+| Sécurité | Secrets, gate, adaptateurs SAST/SCA, exceptions revues | `core/src/security/` |
 
 **Non construit à ce stade** (phases ultérieures) : Execution Engine, Tool Router, Workspace,
 connectors, Memory/Learning/Skill Engine, Project/Git Engine, DevSecOps.
@@ -36,7 +36,7 @@ Le cœur **ne crée pas** ces emplacements et n'écrit pas leur code.
 
 Trois surfaces, et trois seulement :
 
-1. **Objets Python.** La plateforme construit une `Request` (texte + signaux + tenant + acteur)
+1. **Objets du cœur.** La plateforme construit une `Request` (type TypeScript) (texte + signaux + tenant + acteur)
    et appelle `AgentCore.run(...)` ; elle reçoit `Analysis`, `Plan`, `DecisionRecord`, `Task`,
    `CoreRun`.
 2. **Contrats JSON Schema.** Tout ce qui entre et sort est sérialisable et validé : la plateforme
@@ -61,21 +61,26 @@ Rien d'autre. Le cœur ne connaît ni Supabase, ni HTTP, ni interface.
 Ces points sont **nécessaires** à l'intégration et ne peuvent pas être décidés sans arbitrage :
 chacun engage l'architecture au-delà du cœur.
 
-### D-A — Traversée de frontière de langage *(bloquant)*
+### D-A — Frontière de langage : **tranchée**
 
-Le cœur est du **Python**. Si la plateforme de Lovable est une application **TypeScript/Node**
-avec un frontend React, alors un processus Node **ne peut pas importer un paquet Python** :
-il faut un mécanisme de traversée. Trois options :
+Le cœur était initialement écrit en **Python**, et la question ouverte était de savoir comment une
+plateforme TypeScript/Node pourrait l'utiliser — un processus Node ne pouvant pas importer un paquet
+Python. Trois options avaient été posées : héberger un service Python, appeler le cœur en
+sous-processus, ou porter le cœur en TypeScript.
 
-| Option | Description | Ce que cela implique |
-|---|---|---|
-| **A1 — Hôte Python** | La plateforme embarque un service Python dans le même dépôt, qui importe le cœur et l'appelle en processus. Le backend de la plateforme (TS) s'adresse à cet hôte. | Respecte « le cœur est du code du projet ». Ouvre la question : qui écrit l'hôte — le cœur ou la plateforme ? |
-| **A2 — Cœur en sous-processus** | La plateforme lance le cœur comme commande locale (`codidev …`) et lit ses sorties JSON. | Aucune couche nouvelle, mais impose un protocole de ligne de commande stable et des allers-retours par processus. |
-| **A3 — Réécriture** | Le cœur est porté en TypeScript. | Contredit l'architecture : le cerveau est construit ici, en Python. |
+**Décision : le cœur a été porté en TypeScript/Node.js** (voir
+[ADR-0010](adr/ADR-0010-migration-du-coeur-vers-typescript.md)). La frontière de langage n'existe
+donc **plus** : la plateforme et le cœur partagent le même langage et le même runtime, et le cœur
+s'importe **directement**, en processus, comme n'importe quelle bibliothèque.
 
-**Recommandation, non décision :** A1 si la plateforme est JS/TS, avec l'hôte écrit **côté
-plateforme** (c'est de la logique de plateforme : exposer ses propres fonctions à son propre
-frontend). Le cœur resterait un paquet importé, sans API propre.
+| Ce qui a été écarté | Pourquoi |
+|---|---|
+| Hôte Python dans le dépôt | Maintenait deux runtimes, deux chaînes d'outils et une surface de communication à maintenir — pour un produit qui doit rester un seul dépôt, un seul produit |
+| Cœur en sous-processus | Imposait un protocole de ligne de commande stable et des allers-retours entre processus là où un appel de fonction suffit |
+| Interface HTTP | Aurait transformé le cœur en service : une surface d'attaque, une couche de sérialisation et un déploiement supplémentaires, sans bénéfice pour une intégration en processus |
+
+**Conséquence pour la plateforme :** aucune traversée à concevoir. `import { CodiDevCore } from
+'@codidev/core'` suffit, côté serveur.
 
 ### D-B — Persistance des preuves et de l'audit
 

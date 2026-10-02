@@ -16,7 +16,7 @@ et [`../docs/LOVABLE_INTEGRATION.md`](../docs/LOVABLE_INTEGRATION.md).
 
 ## État vérifié
 
-- **244 tests verts**, 15 fichiers de tests (`cd core && npm test`).
+- **249 tests verts**, 16 fichiers de tests (`cd core && npm test`).
 - `npm run verify` = typecheck + lint + tests.
 - Node **>= 22**, développé et vérifié sur **Node 24 LTS** ; ESM.
 - Dépendances d'exécution : **`ajv` et `ajv-formats`** uniquement.
@@ -74,7 +74,7 @@ core/
 │   ├── security/         `secrets`, `report`, `gate`, `allowlist`, `tools`
 │   └── llm/              `types`, `mock`, `deepseek`, `router` (abstraction `LLMProvider`)
 ├── schemas/              13 contrats JSON Schema 2020-12, neutres et partagés
-├── tests/                15 fichiers Vitest (unitaires, intégration, sécurité, parité)
+├── tests/                16 fichiers Vitest (unitaires, intégration, sécurité, parité)
 ├── dist/                 sortie compilée (générée)
 ├── package.json · tsconfig.json · tsconfig.build.json · biome.json · vitest.config.ts
 └── tests/fixtures/       journaux écrits par l'implémentation Python, figés
@@ -146,7 +146,7 @@ export CODIDEV_DEEPSEEK_API_KEY='***'   # valeur réelle fournie hors dépôt
 ## Tests et build
 
 ```bash
-npm test        # 244 tests, aucun réseau, aucune clé
+npm test        # 249 tests, aucun réseau, aucune clé
 npm run verify  # typecheck + lint + tests — la référence avant commit
 npm run build   # dist/ prêt à consommer
 ```

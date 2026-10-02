@@ -1,3 +1,8 @@
+> ⚠️ **ARCHIVE HISTORIQUE — ne décrit pas CodiDev aujourd'hui.**
+> Ce document décrit l'ancienne **spécification d'agent** (« Builder Agent », renommée « CodiDev »
+> v3), hébergée par un runtime externe. Il est conservé pour la **traçabilité** : le Core actuel est
+> le paquet **TypeScript/Node.js** dans [`core/`](../../core/), sans runtime de construction associé.
+
 # AGENT_SPEC.md — spécification complète de CodiDev
 
 Version : **3.0.0** · Identifiant : `codidev` · Langue par défaut : français

@@ -1,3 +1,8 @@
+> ⚠️ **ARCHIVE HISTORIQUE — ne décrit pas CodiDev aujourd'hui.**
+> Ce document décrit l'ancienne **définition d'agent** (« Builder Agent », renommée « CodiDev » v3),
+> hébergée par un runtime externe et pilotée par une plateforme. Il est conservé pour la
+> **traçabilité** : le Core actuel est le paquet **TypeScript/Node.js** dans [`core/`](../../core/).
+
 # CodiDev — description complète
 
 Document de référence : ce qu'est l'agent, ce qu'il sait faire, comment il est gouverné, où il
