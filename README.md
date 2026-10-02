@@ -9,10 +9,11 @@ Boucle cœur : **Understand → Plan → Decide → Execute → Verify → Learn
 > ## ⚠️ Le cœur est en TypeScript / Node.js
 >
 > L'implémentation **officielle et supportée** du cœur est le paquet **TypeScript
-> `@codidev/core`**, dans [`core/`](core/). Le cœur **Python** historique vit dans
-> `core/python/` (implémentation historique) **a été retirée**. La parité reste vérifiable :
-> mais **il n'est plus l'implémentation supportée**, n'évolue plus et **ne doit pas être utilisé**
-> par la plateforme. Voir [ADR-0010](docs/adr/ADR-0010-migration-du-coeur-vers-typescript.md).
+> `@codidev/core`**, dans [`core/`](core/). L'implémentation **Python** historique a été
+> **retirée du dépôt** après démonstration de la parité : TypeScript en est désormais la
+> **seule** implémentation. La parité reste vérifiable — les journaux écrits par
+> l'implémentation Python sont figés dans `core/tests/fixtures/` et relus à chaque exécution
+> des tests. Voir [ADR-0010](docs/adr/ADR-0010-migration-du-coeur-vers-typescript.md).
 >
 > Si vous lisez du code, écrivez `import { CodiDevCore } from '@codidev/core'` — pas `import
 > codidev`.

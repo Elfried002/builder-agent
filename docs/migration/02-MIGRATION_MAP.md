@@ -8,9 +8,10 @@ Légende — *Statut* : `PORTÉ` (existe en TS et testé) · `PROPOSÉ` (conçu,
 
 > **État au 2026-10-02 :** le cœur TypeScript (`core/`, paquet `@codidev/core`) est l'implémentation
 > **officielle**. Les composants ci-dessous marqués `PORTÉ` existent réellement dans `core/src/`
-> et sont couverts par la suite de tests du paquet. Le cœur Python (`core/python/`) est conservé en
-> quarantaine comme implémentation de référence pour la **parité croisée** ; il n'est plus
-> l'implémentation supportée (voir [ADR-0010](../adr/ADR-0010-migration-du-coeur-vers-typescript.md)).
+> et sont couverts par la suite de tests du paquet. L'implémentation Python a été **retirée** : la
+> parité croisée reste vérifiable par les journaux qu'elle a produits, figés dans
+> `core/tests/fixtures/` et relus par la suite de tests (voir
+> [ADR-0010](../adr/ADR-0010-migration-du-coeur-vers-typescript.md)).
 >
 > Preuve : `cd core && npm test` → **15 fichiers de tests, 244 tests, 244 verts** (Node 24 LTS).
 > Deux d'entre eux vérifient la parité croisée avec l'implémentation Python.

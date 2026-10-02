@@ -12,10 +12,10 @@ Le **cœur** est le cerveau de CodiDev, écrit en **TypeScript/Node.js** dans le
 `@codidev/core` (`core/`). La **plateforme** l'importe **en processus**, comme une bibliothèque,
 et lui passe des demandes. Le cœur ne s'interroge pas à distance : **il n'y a pas d'API HTTP**.
 
-> **Langage officiel — à lire avant tout.** Le cœur supporté est **TypeScript/Node.js**. Le dossier
-> `core/python/` contient l'implémentation **historique** (LEGACY) : elle reste exécutable pour les
-> tests de **parité croisée**, mais **elle n'est plus le cœur**, elle n'évolue plus et ne doit
-> **jamais** être importée, appelée ou copiée par la plateforme. Voir
+> **Langage officiel — à lire avant tout.** Le cœur est **TypeScript/Node.js**, et c'est sa
+> **seule** implémentation. L'implémentation Python historique (`core/python/`) a été **retirée du
+> dépôt** : il n'existe plus de cœur Python à importer, appeler ou copier, et rien de cette
+> implémentation ne doit être réintroduit. Voir
 > [ADR-0010](adr/ADR-0010-migration-du-coeur-vers-typescript.md).
 
 ---
@@ -65,8 +65,9 @@ Deux interdits opposables :
 
 1. **Ne pas reconstruire un cœur concurrent.** Ne réimplémentez pas le contexte, la
    planification, la décision, les tâches, les preuves, l'audit ou la sécurité : importez-les.
-2. **Ne pas réutiliser le Python.** `core/python/` est LEGACY. Aucun import Python, aucun
-   sous-processus vers `codidev`, aucune copie de logique depuis `core/python/`.
+2. **Ne pas chercher un cœur Python.** Il n'en existe plus : l'implémentation historique a été
+   retirée du dépôt. Rien à importer, aucun sous-processus à lancer, aucune logique à copier
+   depuis une implémentation qui n'existe plus. Le seul cœur est `@codidev/core`.
 
 ## 4. Comment l'importer
 
@@ -278,7 +279,8 @@ donnez au LLM aucun accès direct à vos outils, votre base ou vos identifiants.
 - tout chemin profond dans `core/src/**` (ex. `core/src/agent/core.js`,
   `core/src/security/secrets.js`) en dehors de ce qui est réexporté par `src/index.ts` ;
 - `dist/**` et les fichiers de construction (`tsconfig*`, `biome.json`, `vitest.config.ts`) ;
-- **`core/python/**`** : implementation historique, jamais importée ;
+- **Aucun cœur Python** : l'implémentation historique a été retirée du dépôt (seuls subsistent,
+  dans `core/tests/fixtures/`, des journaux qu'elle a produits et que les tests relisent) ;
 - les tests, les rapports et les fixtures en tant que code de production.
 
 Règle simple : **importez `@codidev/core` et `@codidev/core/schemas/*`, rien d'autre.** Si vous
@@ -329,7 +331,7 @@ Suivez son `README.md` pour la configuration exacte.
 
 | Erreur | Correct |
 |---|---|
-| Importer `core/python/**` ou lancer `codidev` en sous-processus | Importer `@codidev/core` |
+| Chercher un cœur Python ou lancer `codidev` en sous-processus | Importer `@codidev/core` |
 | Réécrire planification / décision / preuves côté plateforme | Appeler le cœur |
 | Exposer le cœur derrière une API HTTP interne | Import direct (même dépôt, même runtime) |
 | Appeler le cœur depuis un composant client | Côté serveur uniquement |

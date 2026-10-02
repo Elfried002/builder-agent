@@ -8,9 +8,11 @@ aucun service. La plateforme (construite par Lovable) l'importe en processus com
 bibliothèque du projet — voir [`../docs/CORE_PLATFORM_BOUNDARY.md`](../docs/CORE_PLATFORM_BOUNDARY.md)
 et [`../docs/LOVABLE_INTEGRATION.md`](../docs/LOVABLE_INTEGRATION.md).
 
-> **Langage officiel.** Le cœur est en **TypeScript/Node.js**. Le cœur Python historique vit dans
-> `core/python/` (implémentation historique) **a été retirée**. La parité croisée reste vérifiable
-> supportée** et n'évolue plus (voir [ADR-0010](../docs/adr/ADR-0010-migration-du-coeur-vers-typescript.md)).
+> **Langage officiel.** Le cœur est en **TypeScript/Node.js**, et c'est sa **seule**
+> implémentation : l'implémentation Python historique a été retirée du dépôt après démonstration
+> de la parité (voir [ADR-0010](../docs/adr/ADR-0010-migration-du-coeur-vers-typescript.md)).
+> Les journaux qu'elle a produits sont figés dans `tests/fixtures/` et relus à chaque exécution
+> des tests : la garantie que les preuves restent mutuellement vérifiables est conservée.
 
 ## État vérifié
 

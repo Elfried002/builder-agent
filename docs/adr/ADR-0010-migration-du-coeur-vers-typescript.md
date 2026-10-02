@@ -7,7 +7,7 @@
 ## Contexte
 
 Le cœur de CodiDev a d'abord été construit en **Python** (paquet `codidev`, 31 fichiers, 204
-tests, `core/python/`). La mission de construction a ensuite fixé un objectif différent : le cœur
+tests, aujourd'hui retiré). La mission de construction a ensuite fixé un objectif différent : le cœur
 doit être intégré **dans le projet final construit par Lovable**, une application Web moderne dont
 la pile attendue est **TypeScript / Node.js / React / Next.js**.
 
@@ -19,10 +19,12 @@ d'exécution, une surface de communication à maintenir et une chaîne d'outils 
 produit qui doit rester un **seul dépôt, un seul produit**.
 
 Le cœur a en conséquence été **réécrit en TypeScript** dans `core/` (paquet `@codidev/core`), en
-préservant les invariants et les contrats plutôt que la forme du code. Le Python historique reste
-retirée du dépôt après démonstration de la parité ; il **n'est plus l'implémentation
-officielle** : il sert uniquement de référence pour les tests de **parité croisée** (les journaux
-produits par une implémentation sont relus et re-hachés par l'autre) jusqu'à sa suppression.
+préservant les invariants et les contrats plutôt que la forme du code. La parité a été démontrée
+(38 invariants, matrice générée par exécution) **avant** que l'implémentation Python ne soit
+**retirée du dépôt** : TypeScript en est désormais la **seule** implémentation officielle. La
+garantie de compatibilité des preuves subsiste sous forme de journaux écrits par l'ancienne
+implémentation, figés dans `core/tests/fixtures/` et relus à chaque exécution des tests — une
+preuve reste vérifiable par l'implémentation qui, elle, existe toujours.
 
 État vérifié de l'implémentation TypeScript à la date de cette décision :
 
@@ -44,8 +46,9 @@ produits par une implémentation sont relus et re-hachés par l'autre) jusqu'à 
    provider `DeepSeek` (MVP) et provider `mock` (tests). Le cœur ne dépend d'aucun fournisseur
    nommé ; la clé d'API vit exclusivement dans l'**environnement d'exécution** et n'apparaît ni
    dans le code, ni dans les journaux, ni dans les preuves.
-4. Le **Python est en quarantaine** dans `core/python/` : conservé, exécutable, mais sans évolution
-   de fonctionnalité. Sa **suppression** est planifiée une fois la parité démontrée de bout en bout.
+4. Le **Python a été mis en quarantaine** dans `core/python/` pendant la migration : conservé et
+   exécutable, mais sans évolution de fonctionnalité, afin que la parité puisse être **démontrée**
+   plutôt qu'affirmée. Il a ensuite été **retiré** une fois cette démonstration faite.
 5. Le **runtime Node est dédié** et hors Hermes : Hermes est un outil de construction, pas une
    dépendance du produit. L'environnement d'exécution du cœur est un Node >= 22 standard.
 6. Toute nouvelle fonctionnalité du cœur s'écrit **en TypeScript**, jamais en Python.
@@ -61,9 +64,9 @@ produits par une implémentation sont relus et re-hachés par l'autre) jusqu'à 
 
 ## Conséquences
 
-- **Suppression ultérieure du Python.** `core/python/` sera retiré après démonstration de la
-  parité. D'ici là, il reste exécutable et est utilisé par les tests de parité croisée ; aucun
-  nouveau code n'y est ajouté.
+- **Suppression du Python : faite.** `core/python/` a été retiré après démonstration de la parité.
+  La garantie de compatibilité des preuves lui survit : les journaux qu'il a produits sont figés
+  dans `core/tests/fixtures/` et relus à chaque exécution de la suite de tests.
 - **Contrats dans `core/schemas/`.** Les schémas sont neutres et partagés : ils survivent au
   changement d'implémentation et définissent ce qui entre et sort du cœur.
 - **Environnement Node dédié hors Hermes.** Le développement et la vérification du cœur
