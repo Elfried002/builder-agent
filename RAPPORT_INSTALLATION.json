@@ -70,9 +70,10 @@
   "GIT_CHECK": {
     "branch": "main",
     "remote": "https://github.com/Elfried002/builder-agent.git",
-    "local_commit": "a_completer",
-    "pushed": false,
-    "note": "renseigne apres le push, par relecture distante"
+    "local_commit": "8462fab",
+    "remote_commit": "8462fabe3a506a583172b1ef499a6c9e56fc8053",
+    "pushed": true,
+    "evidence": "gh api repos/Elfried002/builder-agent/commits/main --jq .sha"
   },
   "BLOCKERS": [],
   "STATUS": "VERIFIED"
