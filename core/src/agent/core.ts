@@ -29,7 +29,7 @@ import {
 } from '../context/engine.js';
 import { DecisionEngine, type Option, option, PolicyVerdict } from '../decision/engine.js';
 import { PlanInvalidError } from '../errors.js';
-import type { EvidenceStore } from '../evidence.js';
+import { type EvidenceStore, ValidationOutcome } from '../evidence.js';
 import type { LLMProvider } from '../llm/types.js';
 import { LLMRole } from '../llm/types.js';
 import {
@@ -42,7 +42,7 @@ import {
 } from '../planner/planner.js';
 import { OperationStatus, RiskClass, requiresHumanApproval, TaskState } from '../statuses.js';
 import type { Task } from '../task/engine.js';
-import { TaskEngine } from '../task/engine.js';
+import { type AuditJournal, type EvidenceJournal, TaskEngine } from '../task/engine.js';
 import { analyzeSignals, classifyWithLLM, type IntentRecord } from './intent.js';
 import type { Request } from './request.js';
 
@@ -184,6 +184,61 @@ export interface AgentCoreOptions {
 }
 
 /**
+ * Adapte le magasin de preuves à l'interface structurelle attendue par le Task Engine.
+ *
+ * Le Task Engine décrit ce dont il a besoin (`record(operation, status, options)`) sans dépendre du
+ * magasin ; ce dernier, lui, valide ses entrées par contrat et n'accepte donc pas `null` là où son
+ * schéma déclare un champ absent. L'adaptateur fait la traduction explicitement, plutôt que de
+ * faire céder un des deux côtés : un `null` silencieusement converti en champ vide finirait dans
+ * une preuve.
+ *
+ * Sans cet adaptateur, les transitions de tâche ne seraient consignées que dans l'historique de la
+ * tâche — l'invariant « toute transition est journalisée en preuve et en audit » (I-14) ne serait
+ * tenu qu'à moitié.
+ */
+function evidenceJournalOf(store: EvidenceStore): EvidenceJournal {
+  return {
+    record: (operation, status, options) =>
+      store.record(operation, status, {
+        actor: options.actor,
+        ...(options.tenantId === null ? {} : { tenantId: options.tenantId }),
+        ...(options.projectId === null ? {} : { projectId: options.projectId }),
+        resource: options.resource,
+        ...(options.warnings === null ? {} : { warnings: options.warnings }),
+        ...(options.validation === null
+          ? {}
+          : {
+              validation: new ValidationOutcome(
+                options.validation.criteria,
+                options.validation.performed,
+                options.validation.passed,
+              ),
+            }),
+        ...(Object.keys(options.externalIds).length === 0
+          ? {}
+          : { externalIds: options.externalIds }),
+      }),
+  };
+}
+
+/** Adapte le journal d'audit à l'interface structurelle attendue par le Task Engine. */
+function auditJournalOf(ledger: AuditLedger): AuditJournal {
+  return {
+    recordAction: (record) =>
+      ledger.recordAction({
+        actor: record.actor,
+        action: record.action,
+        resource: record.resource,
+        riskClass: record.riskClass,
+        result: record.result,
+        ...(record.tenantId === null ? {} : { tenantId: record.tenantId }),
+        ...(record.projectId === null ? {} : { projectId: record.projectId }),
+        ...(record.evidenceId === null ? {} : { evidenceId: record.evidenceId }),
+      }),
+  };
+}
+
+/**
  * Cycle agentique du cœur.
  *
  * Toutes les briques sont injectables et facultatives : le cœur fonctionne sans LLM, sans journal
@@ -203,7 +258,15 @@ export class AgentCore {
   constructor(options: AgentCoreOptions = {}) {
     this.planner = options.planner ?? new Planner();
     this.decisionEngine = options.decisionEngine ?? new DecisionEngine();
-    this.taskEngine = options.taskEngine ?? new TaskEngine();
+    this.taskEngine =
+      options.taskEngine ??
+      new TaskEngine({
+        ...(options.evidence === undefined
+          ? {}
+          : { evidence: evidenceJournalOf(options.evidence) }),
+        ...(options.audit === undefined ? {} : { audit: auditJournalOf(options.audit) }),
+        ...(options.defaultActor === undefined ? {} : { defaultActor: options.defaultActor }),
+      });
     this.contextEngine = options.contextEngine ?? new ContextEngine();
     this.evidence = options.evidence;
     this.audit = options.audit;

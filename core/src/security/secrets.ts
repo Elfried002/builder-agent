@@ -480,7 +480,7 @@ export function iterFiles(
 function redactMatch(match: RegExpMatchArray, rule: SecretRule): string {
   const span = valueSpan(match, rule);
   if (rule.valueGroup !== undefined && rule.valueFilter !== undefined) {
-    const candidate = (match.groups ?? {})[rule.valueGroup] ?? '';
+    const candidate = match.groups?.[rule.valueGroup] ?? '';
     if (!rule.valueFilter(candidate)) return match[0];
   }
   if (span === null) return redactionMark(rule.name);

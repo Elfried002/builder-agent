@@ -107,7 +107,10 @@ describe('non-valeurs : ne pas signaler du bruit', () => {
   });
 
   it('ignore les gabarits d’interpolation', () => {
-    expect(rulesOf(`DATABASE_URL=postgresql://app:\${DB_PASSWORD}@host:5432/db`).size).toBe(0);
+    // Le gabarit est construit par concaténation : le test porte sur la valeur produite, pas sur
+    // une chaîne de modèle JavaScript.
+    const gabarit = `DATABASE_URL=postgresql://app:$` + '{DB_PASSWORD}@host:5432/db';
+    expect(rulesOf(gabarit).size).toBe(0);
     expect(rulesOf('password = {mot_de_passe_du_client}').size).toBe(0);
   });
 
@@ -179,7 +182,7 @@ describe('filtres unitaires', () => {
   it('écarte les mots de passe masqués et d’exemple', () => {
     expect(looksLikePassword('***')).toBe(false);
     expect(looksLikePassword('changeme')).toBe(false);
-    expect(looksLikePassword('${DB_PASSWORD}')).toBe(false);
+    expect(looksLikePassword(`$` + '{DB_PASSWORD}')).toBe(false);
     expect(looksLikePassword('s3cr3tP4ssw0rd')).toBe(true);
   });
 

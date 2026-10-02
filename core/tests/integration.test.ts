@@ -23,6 +23,7 @@ import {
   TaskState,
 } from '../src/index.js';
 import type { MockStep } from '../src/llm/index.js';
+import { step } from '../src/planner/planner.js';
 
 const REPO_ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const PYTHON = join(process.env.HOME ?? '', '.local/share/codidev/venv/bin/python');
@@ -112,10 +113,30 @@ describe('cycle complet de bout en bout', () => {
       { useLlmForPlan: true },
     );
     const preuves = readFileSync(join(core.workspaceDir, EVIDENCE_FILENAME), 'utf8');
-    // Le cycle ne peut produire ni EXECUTED ni VERIFIED : il n'exécute rien.
-    expect(preuves).not.toContain('"status":"VERIFIED"');
-    expect(preuves).not.toContain('"status":"EXECUTED"');
-    expect(preuves).toContain('"status":"NOT_EXECUTED"');
+    const enregistrements = preuves
+      .split('\n')
+      .filter((ligne) => ligne.trim() !== '')
+      .map((ligne) => JSON.parse(ligne) as { operation: string; status: string });
+
+    // Rien n'a été vérifié : aucun enregistrement ne peut porter VERIFIED.
+    expect(enregistrements.some((item) => item.status === 'VERIFIED')).toBe(false);
+
+    // Le compte rendu du cycle déclare explicitement qu'aucune exécution n'a eu lieu.
+    const cycle = enregistrements.filter((item) => item.operation === 'core.run');
+    expect(cycle).toHaveLength(1);
+    expect(cycle[0]?.status).toBe('NOT_EXECUTED');
+
+    // Les seules opérations consignées `EXECUTED` sont des transitions de tâche — c'est-à-dire des
+    // opérations qui ont réellement eu lieu (ouvrir une tâche, la faire changer d'état), et non le
+    // travail demandé. La distinction est portée par le nom de l'opération, pas par une nuance.
+    for (const item of enregistrements) {
+      if (item.status === 'EXECUTED') {
+        expect(item.operation.startsWith('task.')).toBe(true);
+      } else {
+        expect(item.operation).toBe('core.run');
+        expect(item.status).toBe('NOT_EXECUTED');
+      }
+    }
   });
 
   it('isole deux tenants, y compris dans les journaux', async () => {
@@ -206,6 +227,42 @@ describe('cycle complet de bout en bout', () => {
     expect(integrite.evidence.count).toBe(0);
     expect(integrite.audit.count).toBeGreaterThanOrEqual(1);
     expect(integrite.audit.ok).toBe(true);
+  });
+});
+
+describe('les transitions de tâche sont journalisées en preuve et en audit (I-14)', () => {
+  it('chaque transition apparaît dans les deux journaux', async () => {
+    const racine = mkdtempSync(join(tmpdir(), 'codidev-i14-'));
+    const core = nouveauCore(racine);
+    await core.run(
+      {
+        text: 'travail journalisé',
+        tenantId: 'tenant-a',
+        actor: 'user-1',
+        hints: { action: 'fix' },
+      },
+      {
+        steps: [
+          step('étape unique', { expectedOutput: 'résultat', verification: ['critère observé'] }),
+        ],
+      },
+    );
+
+    const preuves = readFileSync(join(core.workspaceDir, EVIDENCE_FILENAME), 'utf8');
+    const audit = readFileSync(join(core.workspaceDir, AUDIT_FILENAME), 'utf8');
+
+    // Sans branchement des journaux dans le Task Engine, ces lignes n'existeraient pas : la tâche
+    // ne les conserverait que dans son propre historique, et l'invariant ne serait tenu qu'à moitié.
+    for (const attendu of [
+      'task.open:DRAFT',
+      'task.transition:DRAFT->ANALYZING',
+      'task.transition:ANALYZING->PROPOSED',
+    ]) {
+      expect(preuves).toContain(attendu);
+      expect(audit).toContain(attendu);
+    }
+    expect((await core.integrity()).evidence.ok).toBe(true);
+    expect((await core.integrity()).audit.ok).toBe(true);
   });
 });
 
