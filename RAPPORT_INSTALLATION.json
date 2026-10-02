@@ -69,11 +69,11 @@
   },
   "GIT_CHECK": {
     "branch": "main",
-    "remote": "https://github.com/Elfried002/builder-agent.git",
-    "local_commit": "8462fab",
-    "remote_commit": "8462fabe3a506a583172b1ef499a6c9e56fc8053",
+    "remote": "https://github.com/Elfried002/codidev.git (depot renomme depuis builder-agent le 2026-10-02 ; l'ancienne URL redirige)",
+    "local_commit": "77836bb",
+    "remote_commit": "77836bb9b2959ea19138317887871570ac007bbb",
     "pushed": true,
-    "evidence": "gh api repos/Elfried002/builder-agent/commits/main --jq .sha"
+    "evidence": "gh api repos/Elfried002/codidev/commits/main --jq .sha"
   },
   "BLOCKERS": [],
   "STATUS": "VERIFIED"
