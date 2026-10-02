@@ -1,0 +1,114 @@
+{
+  "agent": "CodiDev",
+  "version": "3.1.0",
+  "identifier": "codidev",
+  "mode": "agent independant — aucune plateforme, aucun orchestrateur",
+  "updated_at": "2026-10-02T12:45:00Z",
+  "regle": "Aucun enregistrement ci-dessous ne decrit une action non executee ; un horodatage null signifie que l'execution n'a pas ete horodatee a la seconde pres.",
+  "operations": [
+    {
+      "operation": "DECONNEXION_ORCHESTRATEUR",
+      "started_at": null,
+      "completed_at": "2026-10-02T12:32:00Z",
+      "status": "VERIFIED",
+      "tools_used": ["cronjob_manage", "terminal"],
+      "commands_executed": [
+        "cronjob_manage remove job_id=f9b4cb569c3e  -> tache de heartbeat supprimee",
+        "rm codidev_heartbeat_kit.py orchestrator_builder_heartbeat.py  (amorces de heartbeat)",
+        "mv .env agent.token agent-builder.token registration.key -> quarantaine-20261002/  (hors depot)",
+        "sleep 75 puis GET /api/v1/agents/me  -> OFFLINE, dernier contact 2026-10-02T12:31:56.179872Z",
+        "POST /api/v1/agents/{agent_id}/revoke  -> HTTP 401 (session administrateur requise)"
+      ],
+      "files_created": [
+        "%LOCALAPPDATA%/hermes/orchestrator-agent/quarantaine-20261002/ (4 identifiants + LISEZ-MOI.txt)"
+      ],
+      "files_verified": [],
+      "tests": [
+        {"nom": "arret des emissions", "etat": "EXECUTED", "preuve": "statut serveur OFFLINE apres 75 s sans heartbeat"},
+        {"nom": "revocation cote plateforme", "etat": "NOT_EXECUTED", "raison": "exige une session d'administration : HTTP 401 avec le seul jeton d'agent"}
+      ],
+      "security_checks": ["identifiants hors du depot", "aucune valeur de secret affichee"],
+      "errors": [],
+      "warnings": ["La revocation definitive reste a faire par un administrateur ; CodiDev n'emet plus rien d'ici la."]
+    },
+    {
+      "operation": "REFONTE_AGENT_INDEPENDANT",
+      "started_at": null,
+      "completed_at": "2026-10-02T12:40:00Z",
+      "status": "VERIFIED",
+      "tools_used": ["terminal", "write_file", "patch", "python"],
+      "commands_executed": [
+        "git rm scripts/inscrire_orchestrateur.py",
+        "git mv scripts/enregistrer_agent_os.py integrations/agent-os/",
+        "git mv scripts/verifier_agent_os.py  integrations/agent-os/",
+        "git mv evidence.json RAPPORT_INSTALLATION.json archive/orchestrateur/",
+        "python refonte_independance.py  -> 34 remplacements dans les fichiers actifs"
+      ],
+      "files_created": [
+        "INTERFACE_WEB.md", "PROMPT_LOVABLE.md",
+        "archive/orchestrateur/README.md", "integrations/agent-os/README.md",
+        "tests/test_definition.py (classe TestIndependance : 4 controles)"
+      ],
+      "files_verified": [
+        "README.md", "DESCRIPTION.md", "AGENT_SPEC.md", "SOUL.md", "SKILL.md",
+        "docs/ARCHITECTURE.md", "docs/EXPLOITATION.md", "docs/GOUVERNANCE.md", "docs/CAPACITES.md",
+        "scripts/verifier_depot.py", "tests/test_definition.py"
+      ],
+      "tests": [{"nom": "controle d'independance", "etat": "EXECUTED", "resultat": "aucune reference de plateforme dans les 11 fichiers actifs"}],
+      "security_checks": ["verifier_depot : 0 secret sur 45 fichiers analyses"],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "operation": "DOCUMENTS_INTERFACE_WEB",
+      "started_at": null,
+      "completed_at": "2026-10-02T12:41:00Z",
+      "status": "VERIFIED",
+      "tools_used": ["write_file"],
+      "commands_executed": [],
+      "files_created": ["INTERFACE_WEB.md", "PROMPT_LOVABLE.md"],
+      "files_verified": ["INTERFACE_WEB.md", "PROMPT_LOVABLE.md"],
+      "tests": [{"nom": "specification d'interface", "etat": "EXECUTED", "contenu": "7 ecrans, modele de donnees, vocabulaire de statuts ferme, direction visuelle, 7 criteres d'acceptation"}],
+      "security_checks": ["l'interface specifiee n'affiche aucun secret et ne fait aucun appel reseau externe"],
+      "errors": [],
+      "warnings": ["L'interface est specifiee, pas encore implementee : c'est l'objet du prompt Lovable."]
+    },
+    {
+      "operation": "CONTROLES_LOCAUX",
+      "started_at": "2026-10-02T12:43:00Z",
+      "completed_at": "2026-10-02T12:43:30Z",
+      "status": "VERIFIED",
+      "tools_used": ["terminal"],
+      "commands_executed": [
+        "python -m unittest discover -s tests -v   -> 15 tests, OK",
+        "python scripts/verifier_depot.py          -> 15/15 controles verts"
+      ],
+      "files_created": [],
+      "files_verified": ["agent/codidev.json", "agent/codidev.prompt.md", "skills/*", "docs/*"],
+      "tests": [
+        {"nom": "suite de tests", "etat": "EXECUTED", "executes": 15, "reussis": 15, "echoues": 0},
+        {"nom": "controle du depot", "etat": "EXECUTED", "controles": 15, "reussis": 15, "avertissements": 0}
+      ],
+      "security_checks": ["aucun secret versionne — 45 fichiers analyses"],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "operation": "PUBLICATION_GIT",
+      "started_at": "2026-10-02T12:44:00Z",
+      "completed_at": "2026-10-02T12:44:30Z",
+      "status": "VERIFIED",
+      "tools_used": ["git", "gh"],
+      "commands_executed": [
+        "git push origin main   -> cc092bd..74e852a",
+        "gh api repos/Elfried002/codidev/commits/main --jq .sha"
+      ],
+      "files_created": [],
+      "files_verified": [],
+      "tests": [{"nom": "preuve de push", "etat": "EXECUTED", "sha_local": "74e852a", "sha_distant": "74e852ae0829b7921c79e7d628f70a6d524f2b9d", "identiques": true}],
+      "security_checks": ["aucun secret pousse"],
+      "errors": [],
+      "warnings": []
+    }
+  ]
+}
