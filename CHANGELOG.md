@@ -3,6 +3,26 @@
 Toutes les modifications notables de Builder Agent sont consignées ici.
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · versionnage sémantique.
 
+## [1.0.1] — 2026-09-30
+
+### Ajouté
+- **`DESCRIPTION.md`** — description complète et opposable de l'agent : identité, mission,
+  3 spécialités et 19 capacités, 15 compétences normatives, workflow en 7 phases, gouvernance,
+  format de sortie, composition de la définition, exploitation, frontière de sécurité, état
+  vérifié sur l'orchestrateur, points ouverts.
+
+### Corrigé
+- **README** — total de capacités ramené de 20 à **19** (aligné sur `docs/CAPACITES.md` et sur
+  le registre de l'orchestrateur) ; `agent_id` plateforme mis à jour vers l'identité attribuée
+  au réenregistrement du 2026-09-30.
+
+### Notes
+- L'identité `agt_5a0af0d2ce044545` (2026-09-24) est **caduque** : son jeton a été refusé le
+  2026-09-30 et le serveur n'en conservait plus la trace. Un jeton d'agent ne se récupère pas,
+  il se renouvelle par un réenregistrement (`POST /api/v1/agents/enroll`).
+- Rappel de contrat : la clé d'enregistrement n'ouvre **que** `/enroll` ; la valider par une
+  route de lecture (`GET /agents`, `GET /agents/me`) produit un faux `401`.
+
 ## [1.0.0] — 2026-09-24
 
 ### Ajouté

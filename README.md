@@ -18,7 +18,7 @@ d'enregistrement / vérification sur un orchestrateur.
 | Rôle | Senior Full-Stack Engineer + Software Architect + DevSecOps Engineer |
 | Runtime | Hermes |
 | Instance | `hermes-builder-agent-01` |
-| `agent_id` plateforme | `agt_5a0af0d2ce044545` |
+| `agent_id` plateforme | `agt_b73d0513a3f346b2` (attribué par l'orchestrateur, 2026-09-30) |
 | Modèle | `deepseek-chat` (api.deepseek.com/v1) — température `0.2`, `max_turns` `24` |
 | Outils | `http_request`, `web_search`, `memory_write`, `memory_read`, `current_time` |
 | Langue | Français par défaut ; anglais si la demande ou le projet l'exige |
@@ -114,7 +114,7 @@ builder-agent/
 │   └── <compétence>/SKILL.md
 ├── docs/
 │   ├── ARCHITECTURE.md             # comment l'agent est composé et exécuté
-│   ├── CAPACITES.md                # 20 capacités → compétences → preuves
+│   ├── CAPACITES.md                # 19 capacités → compétences → preuves
 │   ├── GOUVERNANCE.md              # permissions, Human Gate, interdits, politique mémoire
 │   └── EXPLOITATION.md             # enregistrement, vérification, pièges, dépannage
 ├── scripts/
