@@ -8,22 +8,6 @@
       "reviewed_by": "Elfried002",
       "reviewed_at": "2026-10-02T20:00:00Z",
       "expires_at": null
-    },
-    {
-      "rule": "ruff:S310",
-      "path": "legacy/**",
-      "justification": "Les deux ponts historiques (integrations/agent-os) ouvrent une URL construite depuis un argument en ligne de commande, avec un schéma non restreint. Risque réel d'ouverture de schémas inattendus SI ce code était exécuté — il ne l'est pas : ces scripts sont conservés verbatim au titre de la préservation de l'historique, ne sont appelés par aucun module du cœur, et ne font partie d'aucun chemin d'exécution de CodiDev. Constat conservé dans le rapport, jamais masqué. À corriger si ce code devait être réactivé.",
-      "reviewed_by": "Elfried002",
-      "reviewed_at": "2026-10-02T20:00:00Z",
-      "expires_at": null
-    },
-    {
-      "rule": "bandit:B310",
-      "path": "legacy/**",
-      "justification": "Même constat que ruff:S310, vu par Bandit : `urllib.request.urlopen` sur une URL d'argument, dans les ponts historiques hors service. Conservé pour la traçabilité, non exécuté par le cœur, non masqué.",
-      "reviewed_by": "Elfried002",
-      "reviewed_at": "2026-10-02T20:00:00Z",
-      "expires_at": null
     }
   ]
 }

@@ -97,13 +97,12 @@ Correspondance complète : `docs/migration/02-MIGRATION_MAP.md`.
 ## E. Tests — résultats réels
 
 ```
-TypeScript : 242 tests verts / 15 fichiers     tsc --noEmit conforme
+TypeScript : 244 tests verts / 15 fichiers     tsc --noEmit conforme
 Python     : 204 tests verts                   biome : 49 fichiers, aucune erreur
 npm run build vert — paquet importable (146 symboles exportés)
 ```
 
-**Parité :** `docs/migration/03-PARITY_MATRIX.md`, **généré** par `scripts/parity_matrix.py` à partir
-de l'exécution réelle des deux suites.
+**Parité :** `docs/migration/03-PARITY_MATRIX.md`, **généré** par `scripts/parity_matrix.py`.
 
 > **38 invariants — 38 `VERIFIED`, 0 `PARTIAL`, 0 `UNCOVERED`.**
 
@@ -117,28 +116,37 @@ de caractères ni le même traitement Unicode que Python) ; caviardage idempoten
 CRITICAL/HIGH → BLOCK ; exceptions revues et tracées ; scan du code du cœur lui-même — aucun secret
 non revu.
 
-## F. Suppression du Python — `NOT_EXECUTED`, et volontairement
+## F. Suppression du Python — `EXECUTED`
 
-**Statut : préparée, non exécutée.** La condition posée par la mission est remplie (TypeScript
-fonctionnel, responsabilités couvertes, parité démontrée). La suppression est retenue pour une
-raison technique réelle, pas par prudence vague :
+**Séquence réellement exécutée, dans cet ordre :**
 
-> Le test de parité croisée (`core/tests/integration.test.ts`, dernier bloc) **invoque l'interpréteur
-> Python** pour relire un journal produit par TypeScript. Supprimer `core/python/` maintenant
-> détruirait le test qui prouve la compatibilité des preuves — c'est-à-dire exactement la garantie
-> qu'on cherche à conserver.
+1. **Journal de référence figé.** L'implémentation Python a produit deux journaux
+   (`core/tests/fixtures/evidence-python.jsonl`, `audit-python.jsonl`) — chaînes valides, jeton
+   factice **caviardé à l'écriture** par Python. Leur provenance est documentée dans
+   `core/tests/fixtures/README.md`, avec la commande de production et la raison de ne pas les
+   régénérer.
+2. **Test de parité croisée réécrit.** Il invoquait l'interpréteur Python ; il relit désormais ces
+   artefacts figés avec l'implémentation TypeScript et exige que la chaîne soit intègre. Trois cas :
+   journal reconnu intègre, aucun secret en clair + marque de caviardage présente, **et une
+   altération détectée** — sans ce dernier cas, le test passerait aussi sur un fichier vide.
+3. **Suppression.** `core/python/` retiré du suivi **et** du disque : modules, tests, `pyproject.toml`,
+   `uv.lock`, `LICENSE`, `README.md`. Puis nettoyage des résidus non suivis de la toolchain Python
+   (`core/.pytest_cache`, `core/.ruff_cache`, `__pycache__`) — ils maintenaient des répertoires vides
+   qui faisaient échouer à juste titre le contrôle « une seule implémentation ».
+4. **Outillage réécrit.** `scripts/bootstrap_env.sh` et `scripts/verify.sh` ciblent désormais le
+   seul cœur TypeScript ; `scripts/verify_journal_python.py` est supprimé — le conserver aurait été
+   un outil cassé prétendant vérifier quelque chose.
+5. **Exceptions de sécurité mortes retirées.** `.codidev-security-allowlist.json` contenait trois
+   exceptions ; deux portaient sur des règles d'outils Python (`ruff:S310`, `bandit:B310`) qui ne
+   peuvent plus se déclencher. Une exception morte n'est pas neutre : elle laisse croire qu'un
+   contrôle a été examiné alors qu'il a disparu avec l'outil. Reste une exception, sur la règle de
+   détection de secrets — vivante, puisque le détecteur existe toujours.
+6. **Vérification finale sans Python.** `scripts/verify.sh` → **VERT** : typage, lint, **244 tests**,
+   build importable, aucune vulnérabilité haute ou critique, et un cœur à implémentation unique.
 
-**Séquence correcte, avant toute suppression :**
-
-1. produire et **figer** un journal de référence écrit par Python (`core/tests/fixtures/journal-python.jsonl`) ;
-2. réécrire le test de parité croisée pour vérifier ce **fichier figé** au lieu d'invoquer Python ;
-3. vérifier que le test passe sans Python ;
-4. **alors** supprimer `core/python/` : modules, tests, `pyproject.toml`, `uv.lock`, configuration et
-   scripts Python devenus exclusivement liés à cette implémentation ;
-5. mettre à jour `scripts/bootstrap_env.sh`, `scripts/verify.sh` et la documentation ;
-6. vérifier que la suite TypeScript reste entièrement verte **sans** le dossier Python.
-
-La migration est donc **bloquée sur une étape de séquençage**, pas sur une incertitude technique.
+**Ce qui n'a pas été supprimé :** `legacy/agent-definition-v3/` reste intact. C'est une archive
+historique antérieure au cœur, pas une implémentation concurrente ; la documentation distingue
+« canonical » de « historique ».
 
 ## G. Dépôt
 
@@ -148,7 +156,7 @@ La migration est donc **bloquée sur une étape de séquençage**, pas sur une i
 | `main` local et distant | `193f31a` — **intact**, aucune fusion |
 | Poussé | **non** — aucune opération distante effectuée |
 | Commits | voir ci-dessous |
-| Arbre de travail | modifications en cours (fixture Next.js et documentation, sous-agents) |
+| Arbre de travail | modifications en cours (suppression du Python, outillage, documentation) |
 
 ```
 7d9fdfd test(core): add structural invariants and generate the parity matrix
@@ -178,7 +186,7 @@ Voir `docs/LOVABLE_INTEGRATION.md`. En résumé :
 
 | Réf. | Statut | Objet |
 |---|---|---|
-| R-01 | `PROPOSED` | Suppression du Python : séquence définie (§F), non exécutée |
+| R-01 | `EXECUTED` | Suppression du Python : séquence complète exécutée et vérifiée (§F) |
 | R-02 | `NOT_EXECUTED` | Aucun appel réel à DeepSeek n'a été effectué : le provider est vérifié par `fetch` injecté et réponses simulées. Le premier appel réel reste à faire lors de l'intégration |
 | R-03 | `UNKNOWN` | Comportement de DeepSeek sur les sorties structurées en conditions réelles : non observé. Le code refuse une sortie illisible plutôt que de l'accepter, mais la fréquence réelle est inconnue |
 | R-04 | `NOT_EXECUTED` | Adaptateurs `biome`/`npm audit` : le chemin d'exécution nominal (outil présent, code de sortie 0/1) n'a été exercé qu'avec des sorties analysées hors ligne, pas sur une campagne complète |

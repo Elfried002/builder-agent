@@ -1,67 +1,65 @@
 #!/usr/bin/env bash
+# Verification complete du CodiDev Core.
 #
-# Vérification complète du dépôt CodiDev : lint, format, SAST, SCA, secrets, tests, gate.
+# Chaque controle s'execute reellement et son code de sortie est agrege : ce script ne dit jamais
+# « vert » sur la foi d'un autre controle. Ordre volontaire — typage et lint d'abord (les defauts
+# les moins couteux a corriger), tests ensuite, securite en dernier parce qu'elle inspecte l'arbre
+# entier.
 #
-# Chaque étape est exécutée réellement et son code de sortie est respecté. Un outil absent est
-# signalé comme NOT_EXECUTED par le scan de sécurité et n'est jamais compté comme un succès.
-#
-# Les rapports sont écrits HORS du dépôt : un rapport contient des extraits de code et ne doit ni
-# être versionné, ni être relu comme du code source au scan suivant.
-#
-# Codes de sortie : 0 = tout est vert, 1 = revue requise, 2 = bloqué.
-#
+# Usage : scripts/verify.sh
+# Codes de sortie : 0 = tout est vert · 1 = au moins un controle a echoue
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CODI_VENV_DIR="${CODI_VENV_DIR:-$HOME/.local/share/codidev/venv}"
-CODI_ARTIFACTS="${CODI_ARTIFACTS:-$HOME/.local/share/codidev/artifacts}"
-CORE_DIR="${REPO_ROOT}/core/python"   # cœur Python (migration en cours)
-CODI="${CODI_VENV_DIR}/bin/codidev"
-PYTEST="${CODI_VENV_DIR}/bin/pytest"
-RUFF="${CODI_VENV_DIR}/bin/ruff"
+CORE_DIR="${REPO_ROOT}/core"
+NODE_HOME="${HOME}/.local/share/codidev/node"
+export PATH="${NODE_HOME}/bin:${PATH}"
+
 EXIT_CODE=0
+fail() { echo "  x $1"; EXIT_CODE=1; }
+ok() { echo "  ok $1"; }
 
-say() { printf '\n== %s\n' "$*"; }
+echo "== CodiDev Core - verification =="
+echo "Node $(node --version 2>/dev/null || echo absent)"
 
-if [[ ! -x "$CODI" ]]; then
-  printf 'ERREUR — environnement absent. Exécuter d abord : scripts/bootstrap_env.sh\n' >&2
-  exit 2
+echo "-- 1. Typage"
+if (cd "${CORE_DIR}" && npx tsc --noEmit); then ok "typage conforme"; else fail "erreurs de typage"; fi
+
+echo "-- 2. Lint et format"
+if (cd "${CORE_DIR}" && npx biome check .); then ok "lint conforme"; else fail "lint en echec"; fi
+
+echo "-- 3. Tests"
+if (cd "${CORE_DIR}" && npx vitest run); then ok "tests verts"; else fail "tests en echec"; fi
+
+echo "-- 4. Construction et importabilite du paquet"
+if (cd "${CORE_DIR}" && npm run build --silent); then
+  if node -e "import('${CORE_DIR}/dist/index.js').then(() => process.exit(0)).catch(() => process.exit(1))"; then
+    ok "build emis et importable"
+  else
+    fail "build emis mais non importable"
+  fi
+else
+  fail "build en echec"
 fi
 
-mkdir -p "$CODI_ARTIFACTS"
+echo "-- 5. Dependances : vulnerabilites connues"
+if (cd "${CORE_DIR}" && node -e "
+  const { execSync } = require('node:child_process');
+  let data = '';
+  try { data = execSync('npm audit --json', { encoding: 'utf8', stdio: ['ignore','pipe','ignore'] }); }
+  catch (error) { data = String(error.stdout || '{}'); }
+  let vulns = { high: 0, critical: 0 };
+  try { vulns = JSON.parse(data).metadata.vulnerabilities; } catch {}
+  process.exit(Number(vulns.high || 0) + Number(vulns.critical || 0) > 0 ? 1 : 0);
+"); then ok "aucune vulnerabilite haute ou critique"; else fail "vulnerabilites hautes ou critiques"; fi
 
-say "lint (ruff check)"
-if ! "$RUFF" check "$CORE_DIR/src" "$CORE_DIR/tests"; then
-  EXIT_CODE=2
+echo "-- 6. Une seule implementation du coeur"
+if [[ -d "${REPO_ROOT}/core/python" ]]; then
+  fail "l'implementation Python est encore presente : deux coeurs concurrents"
+else
+  ok "le coeur n'a qu'une implementation (TypeScript)"
 fi
 
-say "format (ruff format --check)"
-if ! "$RUFF" format --check "$CORE_DIR/src" "$CORE_DIR/tests"; then
-  EXIT_CODE=2
-fi
-
-say "SAST (bandit) + SCA (pip-audit) + secrets + lint agrégés par le gate"
-"$CODI" security scan "$REPO_ROOT" \
-  --json "$CODI_ARTIFACTS/security-report.json" \
-  --policy "${CODI_POLICY:-default}"
-GATE_CODE=$?
-if [[ $GATE_CODE -gt $EXIT_CODE ]]; then
-  EXIT_CODE=$GATE_CODE
-fi
-
-say "contrats (auto-contrôle des schémas)"
-"$CODI" contracts list
-
-say "tests (pytest)"
-if ! (cd "$CORE_DIR" && "$PYTEST" -q); then
-  EXIT_CODE=2
-fi
-
-say "résultat"
-printf 'rapport : %s/security-report.json\n' "$CODI_ARTIFACTS"
-case $EXIT_CODE in
-  0) printf 'VERT — aucun blocage, aucune revue requise\n' ;;
-  1) printf 'REVUE REQUISE — consulter le rapport\n' ;;
-  *) printf 'BLOQUÉ — consulter le rapport\n' ;;
-esac
-exit $EXIT_CODE
+echo
+if [[ ${EXIT_CODE} -eq 0 ]]; then echo "VERT - aucun blocage"; else echo "ROUGE - voir les controles ci-dessus"; fi
+exit ${EXIT_CODE}

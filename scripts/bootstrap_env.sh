@@ -1,53 +1,37 @@
 #!/usr/bin/env bash
+# Environnement de construction du CodiDev Core (TypeScript / Node.js).
 #
-# Crée ou rafraîchit l'environnement Python isolé de CodiDev.
+# Le coeur n'utilise que son propre environnement Node.js, installe hors des paquets systeme et
+# hors du runtime de l'agent de construction : melanger les dependances rendrait la
+# reproductibilite impossible et exposerait le coeur a des ruptures qu'il ne controle pas.
 #
-# Contraintes respectées :
-#   - aucune dépendance système, aucun `sudo` ;
-#   - l'environnement vit HORS du dépôt et HORS de tout environnement tiers ;
-#   - les versions sont celles épinglées dans pyproject.toml et verrouillées dans uv.lock.
-#
+# Usage : scripts/bootstrap_env.sh
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CORE_DIR="${REPO_ROOT}/core/python"   # cœur Python (migration en cours vers TypeScript)
-CODI_UV_BIN="${CODI_UV_BIN:-$HOME/.local/bin/uv}"
-CODI_VENV_DIR="${CODI_VENV_DIR:-$HOME/.local/share/codidev/venv}"
-CODI_PYTHON_VERSION="${CODI_PYTHON_VERSION:-3.12}"
+CORE_DIR="${REPO_ROOT}/core"
+NODE_HOME="${HOME}/.local/share/codidev/node"
 
-say() { printf '%s\n' "$*"; }
-
-if [[ ! -x "$CODI_UV_BIN" ]]; then
-  say "ERREUR — 'uv' est introuvable à l'emplacement attendu : $CODI_UV_BIN"
-  say "Installation attendue (aucun sudo) :"
-  say "  curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=\"\$HOME/.local/bin\" UV_NO_MODIFY_PATH=1 sh"
-  exit 2
+if [[ ! -x "${NODE_HOME}/bin/node" ]]; then
+  echo "Node.js dedie absent : ${NODE_HOME}/bin/node" >&2
+  echo "Installer la version LTS officielle dans ce repertoire, en verifiant l'empreinte SHA-256" >&2
+  echo "contre la source officielle (voir README.md)." >&2
+  exit 1
 fi
 
-say "uv        : $("$CODI_UV_BIN" --version)"
-say "dépôt     : $REPO_ROOT"
-say "cœur      : $CORE_DIR"
-say "environnement : $CODI_VENV_DIR"
+export PATH="${NODE_HOME}/bin:${PATH}"
+echo "Node.js      : $(node --version) ($(command -v node))"
+echo "npm          : $(npm --version)"
+echo "Version requise : >= 22 (developpe et verifie sur Node 24 LTS)"
 
-say "→ installation de CPython ${CODI_PYTHON_VERSION} (géré par uv, hors environnement tiers)"
-"$CODI_UV_BIN" python install "$CODI_PYTHON_VERSION"
-
-if [[ -x "$CODI_VENV_DIR/bin/python" ]]; then
-  say "→ environnement existant conservé"
+cd "${CORE_DIR}"
+if [[ -f package-lock.json ]]; then
+  # `npm ci` installe exactement le contenu du verrou : un environnement reproductible ne se
+  # construit pas sur des versions resolues au moment de l'installation.
+  npm ci
 else
-  say "→ création de l'environnement"
-  mkdir -p "$(dirname "$CODI_VENV_DIR")"
-  "$CODI_UV_BIN" venv --python "$CODI_PYTHON_VERSION" "$CODI_VENV_DIR"
+  npm install
 fi
 
-say "→ synchronisation depuis uv.lock (dépendances épinglées)"
-(
-  cd "$CORE_DIR"
-  UV_PROJECT_ENVIRONMENT="$CODI_VENV_DIR" "$CODI_UV_BIN" sync --locked
-)
-
-say "→ versions installées"
-UV_PROJECT_ENVIRONMENT="$CODI_VENV_DIR" "$CODI_UV_BIN" tree --depth 1 2>/dev/null || true
-
-say "OK — environnement prêt : $CODI_VENV_DIR"
-say "Utiliser : $CODI_VENV_DIR/bin/codidev --help"
+echo
+echo "Environnement pret. Verification complete : scripts/verify.sh"

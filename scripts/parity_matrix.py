@@ -70,7 +70,13 @@ def parse_audit_document() -> dict[str, list[str]]:
 
 
 def python_suite() -> tuple[set[str], bool, str]:
-    """Identifiants collectés, suite verte ou non, résumé lisible."""
+    """Identifiants collectés, suite verte ou non, résumé lisible.
+
+    L'implémentation Python a été retirée après démonstration de la parité. Le script ne peut donc
+    plus la ré-exécuter : il le dit, au lieu de présenter une colonne de référence comme revérifiée.
+    """
+    if not PYTEST.is_file() or not PY_CORE.is_dir():
+        return set(), False, "implémentation retirée — colonne de référence figée, non ré-exécutée"
     collect = subprocess.run(  # noqa: S603
         [str(PYTEST), "--collect-only", "-q"],
         cwd=PY_CORE,
@@ -150,12 +156,18 @@ def main(argv: list[str]) -> int:
     collected, python_green, python_summary = python_suite()
     ts_by_invariant, ts_green, ts_summary = typescript_suite()
 
+    python_available = PYTEST.is_file() and PY_CORE.is_dir()
+
     rows: list[dict[str, object]] = []
     for invariant in sorted(python_tests):
         references = python_tests[invariant]
         missing = [ref for ref in references if ref.rsplit("::", 1)[-1] not in collected]
         ts_tests = ts_by_invariant.get(invariant, [])
-        if references and not missing and ts_tests and python_green and ts_green:
+        if not python_available:
+            # La colonne de référence ne peut plus être ré-exécutée : le verdict ne porte donc que
+            # sur ce qui est réellement vérifiable aujourd'hui, et le dit explicitement.
+            verdict = "VERIFIED (TypeScript)" if ts_tests and ts_green else "UNCOVERED"
+        elif references and not missing and ts_tests and python_green and ts_green:
             verdict = "VERIFIED"
         elif (references and not missing) or ts_tests:
             verdict = "PARTIAL"
@@ -171,7 +183,7 @@ def main(argv: list[str]) -> int:
             }
         )
 
-    verified = sum(1 for row in rows if row["verdict"] == "VERIFIED")
+    verified = sum(1 for row in rows if str(row["verdict"]).startswith("VERIFIED"))
     partial = sum(1 for row in rows if row["verdict"] == "PARTIAL")
     uncovered = sum(1 for row in rows if row["verdict"] == "UNCOVERED")
     ts_only = sorted(set(ts_by_invariant) - set(python_tests))
@@ -183,10 +195,20 @@ def main(argv: list[str]) -> int:
         "réelle des deux suites de tests, pas d'une déclaration. Un invariant non couvert est listé",
         "comme non couvert.",
         "",
-        f"- Suite Python : {python_summary} — {'VERTE' if python_green else 'ROUGE'}",
+        (f"- Suite Python (référence) : {python_summary}"),
         f"- Suite TypeScript : {ts_summary} — {'VERTE' if ts_green else 'ROUGE'}",
         f"- Invariants recensés : {len(rows)} — **{verified} VERIFIED**, {partial} PARTIAL, "
         f"{uncovered} UNCOVERED",
+        "",
+        (
+            "> L'implémentation Python a été retirée du dépôt après démonstration de la parité. Sa "
+            "colonne est **figée** : elle n'est plus ré-exécutée, et le document ne prétend pas le "
+            "contraire. La colonne TypeScript reste vérifiée à chaque exécution de ce script, et les "
+            "journaux de référence produits par Python restent relus par la suite de tests "
+            "(`core/tests/fixtures/`)."
+            if not python_available
+            else ""
+        ),
         "",
         "## Détail par invariant",
         "",

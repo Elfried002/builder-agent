@@ -1,14 +1,14 @@
 /**
- * Tests d'intégration : cycle complet, isolation, secrets, et **parité croisée** avec Python.
+ * Tests d'intégration : cycle complet, isolation, secrets, et **parité croisée**.
  *
- * Le dernier bloc est le plus important : un journal produit par le Core TypeScript est relu par
- * l'implémentation Python, qui recalcule chaque hachage. Si les deux implémentations ne
- * produisaient pas les mêmes octets, ce test échouerait — et la « preuve » ne serait valable que
- * pour l'implémentation qui l'a produite.
+ * Le dernier bloc est le plus important. La parité des preuves ne se démontre pas en comparant du
+ * code : elle se démontre en relisant, avec une implémentation, un journal écrit par une autre. Les
+ * journaux de référence ont été **produits par l'implémentation Python** puis figés dans
+ * `tests/fixtures/` — c'est ce qui permet de retirer cette implémentation sans perdre la garantie
+ * que les preuves restent mutuellement vérifiables.
  */
 
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,17 +17,17 @@ import { describe, expect, it } from 'vitest';
 
 import {
   AUDIT_FILENAME,
+  AuditLedger,
   CodiDevCore,
   EVIDENCE_FILENAME,
+  EvidenceStore,
   OperationStatus,
   TaskState,
 } from '../src/index.js';
 import type { MockStep } from '../src/llm/index.js';
 import { step } from '../src/planner/planner.js';
 
-const REPO_ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const PYTHON = join(process.env.HOME ?? '', '.local/share/codidev/venv/bin/python');
-const VERIFIER = join(REPO_ROOT, 'scripts', 'verify_journal_python.py');
+const CORE_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 /** Clé factice : jamais réelle, jamais valide. */
 function fakeToken(): string {
@@ -266,34 +266,56 @@ describe('les transitions de tâche sont journalisées en preuve et en audit (I-
   });
 });
 
-describe('parité croisée : le journal TypeScript relu par Python', () => {
-  it('Python recalcule les mêmes hachages que le Core TypeScript', async () => {
-    const racine = mkdtempSync(join(tmpdir(), 'codidev-parite-'));
-    const core = nouveauCore(racine);
-    await core.run(
-      {
-        text: 'parité des journaux entre implémentations',
-        tenantId: 'tenant-parite',
-        actor: 'user-1',
-      },
-      { useLlmForPlan: true },
-    );
+describe('parité croisée : un journal écrit par Python relu par le TypeScript', () => {
+  const FIXTURES = join(CORE_ROOT, 'tests', 'fixtures');
 
-    for (const fichier of [EVIDENCE_FILENAME, AUDIT_FILENAME]) {
-      const chemin = join(core.workspaceDir, fichier);
-      let sortie: string;
-      try {
-        sortie = execFileSync(PYTHON, [VERIFIER, chemin], { encoding: 'utf8' });
-      } catch (error) {
-        const echec = error as { stdout?: string; stderr?: string };
-        throw new Error(
-          `l'implémentation Python n'a pas reconnu le journal ${fichier} : ${echec.stdout ?? ''} ${echec.stderr ?? ''}`,
-        );
-      }
-      const rapport = JSON.parse(sortie) as { ok: boolean; count: number; issues: unknown[] };
+  /**
+   * Ces journaux ont été **écrits par l'implémentation Python** du cœur, puis figés ici.
+   *
+   * Le test qui les utilisait invoquait l'interpréteur Python ; il relit désormais un artefact figé.
+   * C'est ce qui permet de retirer l'implémentation Python sans perdre la garantie : les preuves
+   * doivent rester vérifiables par l'implémentation qui, elle, existe toujours.
+   */
+  it('reconnaît intègre un journal produit par l’implémentation Python', async () => {
+    for (const [fichier, contrat] of [
+      ['evidence-python.jsonl', 'evidence'],
+      ['audit-python.jsonl', 'audit_record'],
+    ] as const) {
+      const journal =
+        contrat === 'evidence'
+          ? new EvidenceStore(join(FIXTURES, fichier))
+          : new AuditLedger(join(FIXTURES, fichier));
+      const rapport = await journal.verify();
       expect(rapport.issues).toEqual([]);
       expect(rapport.ok).toBe(true);
       expect(rapport.count).toBeGreaterThan(0);
+      expect(rapport.contract).toBe(contrat);
     }
+  });
+
+  it('le journal figé ne contient aucun secret en clair et porte la marque de caviardage', () => {
+    const contenu = readFileSync(join(FIXTURES, 'evidence-python.jsonl'), 'utf8');
+    // Le jeton factice fourni à l'implémentation Python a été neutralisé à l'écriture : c'est la
+    // garantie (I-29) que la suppression du Python ne doit pas emporter avec elle.
+    expect(contenu).toContain('REDACTED');
+    expect(contenu).not.toContain(`${'gh'}${'p_'}`);
+  });
+
+  it('une altération du journal figé serait détectée', async () => {
+    // Sans ce contrôle, un test qui se contente de « lire sans erreur » passerait aussi sur un
+    // fichier vide, ou sur un journal dont la vérification ne vérifie rien.
+    const racine = mkdtempSync(join(tmpdir(), 'codidev-altere-'));
+    const copie = join(racine, 'evidence-python.jsonl');
+    const lignes = readFileSync(join(FIXTURES, 'evidence-python.jsonl'), 'utf8')
+      .split('\n')
+      .filter((ligne) => ligne.trim() !== '');
+    const premier = JSON.parse(lignes[0] ?? '{}') as Record<string, unknown>;
+    premier.status = 'VERIFIED';
+    lignes[0] = JSON.stringify(premier);
+    writeFileSync(copie, `${lignes.join('\n')}\n`, 'utf8');
+
+    const rapport = await new EvidenceStore(copie).verify();
+    expect(rapport.ok).toBe(false);
+    expect(rapport.issues.some((issue) => issue.code === 'HASH_MISMATCH')).toBe(true);
   });
 });
