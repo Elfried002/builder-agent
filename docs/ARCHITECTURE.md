@@ -1,4 +1,4 @@
-# Architecture — Builder Agent
+# Architecture — CodiDev
 
 Comment l'agent est composé, ce qui vit où, et pourquoi.
 
@@ -9,8 +9,8 @@ Comment l'agent est composé, ce qui vit où, et pourquoi.
 ```
 Spécification de l'agent
         │
-        ├── profil exécutable   agent/builder-agent.json   (modèle, outils, permissions, gouvernance)
-        └── prompt système      agent/builder-agent.prompt.md   (rôle, workflow, contraintes, sortie)
+        ├── profil exécutable   agent/codidev.json   (modèle, outils, permissions, gouvernance)
+        └── prompt système      agent/codidev.prompt.md   (rôle, workflow, contraintes, sortie)
                     │
                     │  digest normatif (règles applicables, quelques lignes)
                     ▼
@@ -62,7 +62,7 @@ y coller 180 Ko ne l'est pas — cela pousse **dehors** les instructions de gouv
 |---|---|
 | Définition de l'agent | `agent/` — versionnée, source de vérité |
 | Compétences normatives | `skills/` — versionnées, textes complets |
-| Gouvernance | `agent/builder-agent.json` (machine) + `docs/GOUVERNANCE.md` (lisible) |
+| Gouvernance | `agent/codidev.json` (machine) + `docs/GOUVERNANCE.md` (lisible) |
 | Secrets (jeton admin, clé d'enregistrement, jeton d'agent, clé LLM) | **hors du dépôt** — environnement ou `.env.local` |
 | Identité attribuée par la plateforme (`agent_id`, instance) | côté plateforme ; recopiée en documentation seulement |
 
@@ -73,8 +73,13 @@ Deux contrats sont supportés par les scripts de ce dépôt :
 - **Console Agent OS** (Next.js) — `POST /api/agents` avec `Authorization: Bearer <ADMIN_TOKEN>`
   et les champs `name`, `description`, `system_prompt`, `objective`, `model`, `base_url`,
   `temperature`, `max_turns`, `tools`, `schedule`, `enabled` → `scripts/enregistrer_agent_os.py`.
-- **Orchestrateur multi-agents exposé en API** — `POST /api/v1/agents/register` avec
-  `specialty`, `capabilities[]`, `metadata{}` → `scripts/inscrire_orchestrateur.py`.
+- **Orchestrateur multi-agents exposé en API (contrat vérifié)** —
+  `POST /api/v1/agents/enroll` avec `Authorization: Bearer <clé d'enregistrement>` et le corps
+  `{runtime, client_instance_id, requested_name, capabilities[], version, declared_role?}` →
+  `scripts/inscrire_orchestrateur.py`. Réponses traitées explicitement : `401` clé refusée,
+  `409` identité déjà enregistrée, `429` quota, `503` orchestrateur hors ligne. **La clé
+  n'ouvre que `/enroll`** : une route de lecture exige un jeton d'agent et ne prouve rien de sa
+  validité.
 
 Dans les deux cas, **la vérification se fait par relecture**, jamais par le code HTTP de la
 réponse d'écriture. Détails et pièges : [`EXPLOITATION.md`](EXPLOITATION.md).

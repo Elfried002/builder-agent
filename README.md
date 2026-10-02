@@ -1,4 +1,4 @@
-# Builder Agent
+# CodiDev
 
 Agent autonome d'ingénierie logicielle : **Full-Stack Engineering · Advanced Programming · DevSecOps**.
 Conception, développement, sécurisation, test, correction et évolution de logiciels.
@@ -13,12 +13,12 @@ d'enregistrement / vérification sur un orchestrateur.
 
 | Champ | Valeur |
 |---|---|
-| Nom | Builder Agent |
+| Nom | CodiDev |
 | Spécialité (routage) | `builder` |
 | Rôle | Senior Full-Stack Engineer + Software Architect + DevSecOps Engineer |
 | Runtime | Hermes |
-| Instance | `hermes-builder-agent-01` |
-| `agent_id` plateforme | `agt_b73d0513a3f346b2` (attribué par l'orchestrateur, 2026-09-30) |
+| Instance | `hermes-codidev-01` |
+| `agent_id` plateforme | `agt_ff4e15a6d9524dfc` (attribué par l'orchestrateur, 2026-10-02) |
 | Modèle | `deepseek-chat` (api.deepseek.com/v1) — température `0.2`, `max_turns` `24` |
 | Outils | `http_request`, `web_search`, `memory_write`, `memory_read`, `current_time` |
 | Langue | Français par défaut ; anglais si la demande ou le projet l'exige |
@@ -84,7 +84,7 @@ Matrice complète : [`docs/GOUVERNANCE.md`](docs/GOUVERNANCE.md).
 ## 6. Format de sortie (chaque tâche)
 
 ```
-BUILDER AGENT — TASK REPORT
+CODIDEV — TASK REPORT
 TASK:
 STATUS: SUCCESS | PARTIAL | BLOCKED | FAILED
 OBJECTIVE:
@@ -105,10 +105,10 @@ réponse repose sur des preuves concrètes, jamais sur une affirmation.
 ## 7. Contenu du dépôt
 
 ```
-builder-agent/
+codidev/
 ├── agent/
-│   ├── builder-agent.json          # profil exécutable (modèle, outils, permissions, gouvernance)
-│   └── builder-agent.prompt.md     # prompt système complet — incarne la spécification
+│   ├── codidev.json          # profil exécutable (modèle, outils, permissions, gouvernance)
+│   └── codidev.prompt.md     # prompt système complet — incarne la spécification
 ├── skills/                         # bibliothèque normative : 15 compétences (textes complets)
 │   ├── README.md                   # index, domaine → compétence, provenance
 │   └── <compétence>/SKILL.md

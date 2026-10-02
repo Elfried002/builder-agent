@@ -1,0 +1,144 @@
+{
+  "agent": "CodiDev",
+  "version": "3.0.0",
+  "identifier": "codidev",
+  "updated_at": "2026-10-02T12:09:00Z",
+  "regle": "Aucun enregistrement ci-dessous ne decrit une action non executee. Un horodatage null signifie que l'execution n'a pas ete horodatee a la seconde pres.",
+  "operations": [
+    {
+      "operation": "MIGRATION_RENAME_BUILDER_AGENT_VERS_CODIDEV",
+      "started_at": null,
+      "completed_at": null,
+      "status": "VERIFIED",
+      "tools_used": ["terminal", "write_file", "patch", "git"],
+      "commands_executed": [
+        "python migrer_codidev.py   (51 remplacements dans les fichiers actifs)",
+        "git mv agent/builder-agent.json agent/codidev.json",
+        "git mv agent/builder-agent.prompt.md agent/codidev.prompt.md",
+        "git grep -n -i 'builder'   (classification des occurrences restantes)"
+      ],
+      "files_created": ["agent/codidev.json", "agent/codidev.prompt.md"],
+      "files_verified": ["agent/codidev.json", "agent/codidev.prompt.md"],
+      "tests": [],
+      "security_checks": [],
+      "errors": [],
+      "warnings": [
+        "Occurrences de 'builder' volontairement conservees : CHANGELOG (historique), specialite de routage `builder` (contrat d'orchestration), motif technique 'builder' des Dockerfiles dans skills/deployment-patterns/SKILL.md"
+      ]
+    },
+    {
+      "operation": "ALIGNEMENT_CONTRAT_ORCHESTRATEUR",
+      "started_at": null,
+      "completed_at": null,
+      "status": "VERIFIED",
+      "tools_used": ["terminal", "write_file", "patch"],
+      "commands_executed": [
+        "python scripts/inscrire_orchestrateur.py --dry-run   (charge utile imprimee, rien envoye)"
+      ],
+      "files_created": [],
+      "files_verified": ["scripts/inscrire_orchestrateur.py"],
+      "tests": [],
+      "security_checks": ["aucun secret imprime (indicateur de presence seulement)"],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "operation": "TEST_EXECUTION_REELLE",
+      "started_at": "2026-10-02T12:04:33Z",
+      "completed_at": "2026-10-02T12:04:33Z",
+      "status": "VERIFIED",
+      "tools_used": ["terminal"],
+      "commands_executed": [
+        "test -f codidev_real_execution_test.txt   -> PRESENT",
+        "ls -lh codidev_real_execution_test.txt    -> 29 octets",
+        "stat -c '%n | %s octets | modifie %y' codidev_real_execution_test.txt"
+      ],
+      "files_created": ["codidev_real_execution_test.txt"],
+      "files_verified": ["codidev_real_execution_test.txt"],
+      "tests": [{"nom": "CODIDEV_REAL_EXECUTION_TEST", "etat": "EXECUTED", "resultat": "contenu relu conforme"}],
+      "security_checks": [],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "operation": "DISPONIBILITE_OUTILS",
+      "started_at": null,
+      "completed_at": null,
+      "status": "VERIFIED",
+      "tools_used": ["terminal"],
+      "commands_executed": ["python --version", "git --version", "docker --version", "node --version", "npm --version"],
+      "files_created": [],
+      "files_verified": [],
+      "tests": [
+        {"outil": "python", "etat": "AVAILABLE", "preuve": "Python 3.14.7"},
+        {"outil": "git", "etat": "AVAILABLE", "preuve": "git version 2.53.0.windows.3"},
+        {"outil": "docker", "etat": "AVAILABLE", "preuve": "Docker version 29.7.2, build a7dcaa6"},
+        {"outil": "node", "etat": "AVAILABLE", "preuve": "v26.7.0"},
+        {"outil": "npm", "etat": "AVAILABLE", "preuve": "11.19.0"},
+        {"outil": "terminal/filesystem", "etat": "AVAILABLE", "preuve": "creation + lecture + stat du fichier de test d'execution"}
+      ],
+      "security_checks": [],
+      "errors": [],
+      "warnings": ["La disponibilite d'un outil a ete constatee par execution, jamais deduite de sa description."]
+    },
+    {
+      "operation": "SUITE_DE_TESTS_DE_LA_DEFINITION",
+      "started_at": "2026-10-02T12:08:47Z",
+      "completed_at": "2026-10-02T12:08:47Z",
+      "status": "VERIFIED",
+      "tools_used": ["terminal"],
+      "commands_executed": ["python -m unittest discover -s tests -v"],
+      "files_created": ["tests/test_definition.py", "tests/__init__.py"],
+      "files_verified": ["tests/test_definition.py"],
+      "tests": [{"nom": "test_definition", "etat": "EXECUTED", "executes": 11, "reussis": 11, "echoues": 0}],
+      "security_checks": ["test_aucun_secret_dans_le_depot", "test_gitignore_couvre_les_secrets"],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "operation": "CONTROLE_DE_COHERENCE_DU_DEPOT",
+      "started_at": "2026-10-02T12:08:47Z",
+      "completed_at": "2026-10-02T12:08:48Z",
+      "status": "VERIFIED",
+      "tools_used": ["terminal"],
+      "commands_executed": ["python scripts/verifier_depot.py"],
+      "files_created": [],
+      "files_verified": ["agent/codidev.json", "agent/codidev.prompt.md", "skills/*"],
+      "tests": [{"nom": "verifier_depot", "etat": "EXECUTED", "controles": 15, "reussis": 15, "echoues": 0, "avertissements": 0}],
+      "security_checks": ["aucun secret versionne — 39 fichiers analyses"],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "operation": "INSCRIPTION_ORCHESTRATEUR",
+      "started_at": "2026-10-02T12:04:45Z",
+      "completed_at": "2026-10-02T12:04:45Z",
+      "status": "VERIFIED",
+      "tools_used": ["terminal", "scripts/inscrire_orchestrateur.py"],
+      "commands_executed": ["python scripts/inscrire_orchestrateur.py --url https://api.cvlynk.com"],
+      "files_created": [],
+      "files_verified": [],
+      "tests": [{"nom": "POST /api/v1/agents/enroll", "etat": "EXECUTED", "http": 201, "agent_id": "agt_ff4e15a6d9524dfc", "nom": "CodiDev", "role": "builder", "capacites": 19}],
+      "security_checks": ["clic d'enregistrement et jeton d'agent non affiches ; .env hors depot"],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "operation": "PRESENCE_ORCHESTRATEUR",
+      "started_at": "2026-10-02T12:06:10Z",
+      "completed_at": "2026-10-02T12:07:34Z",
+      "status": "VERIFIED",
+      "tools_used": ["terminal", "heartbeat_agent.py (kit)"],
+      "commands_executed": [
+        "python builder_heartbeat_kit.py   (8 battements sur ~80 s)",
+        "GET /api/v1/agents/me x5 (20 s d'ecart)"
+      ],
+      "files_created": [],
+      "files_verified": [],
+      "tests": [{"nom": "presence ON LINE", "etat": "EXECUTED", "echantillons": 5, "online": 5, "age_max_dernier_contact_s": 60}],
+      "security_checks": [],
+      "errors": [],
+      "warnings": []
+    }
+  ]
+}

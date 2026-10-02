@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-enregistrer_agent_os.py — enregistre Builder Agent sur une console Agent OS.
+enregistrer_agent_os.py — enregistre CodiDev sur une console Agent OS.
 
 Contrat : `POST /api/agents` avec `Authorization: Bearer <ADMIN_TOKEN>` et les champs
 `name`, `description`, `system_prompt`, `objective`, `model`, `base_url`, `temperature`,
@@ -56,7 +56,7 @@ def masquer(secret: str | None) -> str:
 
 
 def construire_charge(racine: Path) -> dict:
-    chemin_profil = racine / "agent" / "builder-agent.json"
+    chemin_profil = racine / "agent" / "codidev.json"
     profil = json.loads(chemin_profil.read_text(encoding="utf-8"))
 
     nom_prompt = profil.get("system_prompt_file")
@@ -93,7 +93,7 @@ def poster(base: str, charge: dict, jeton: str) -> tuple[int, dict]:
 
 
 def main(argv=None) -> int:
-    analyseur = argparse.ArgumentParser(description="Enregistre Builder Agent sur une console Agent OS.")
+    analyseur = argparse.ArgumentParser(description="Enregistre CodiDev sur une console Agent OS.")
     analyseur.add_argument("--base-url", default="http://127.0.0.1:3000")
     analyseur.add_argument("--env-file", default=None, help="fichier .env hors depot contenant le jeton")
     analyseur.add_argument("--dry-run", action="store_true", help="imprime la charge utile sans envoyer")
@@ -103,7 +103,7 @@ def main(argv=None) -> int:
     charge = construire_charge(RACINE)
     jeton = lire_jeton(Path(args.env_file) if args.env_file else None)
 
-    print("Builder Agent — enregistrement sur Agent OS")
+    print("CodiDev — enregistrement sur Agent OS")
     print(f"  cible              : {base}/api/agents")
     print(f"  agent              : {charge['name']}")
     print(f"  modele             : {charge['model']} (temperature {charge['temperature']}, max_turns {charge['max_turns']})")

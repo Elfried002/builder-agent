@@ -1,0 +1,79 @@
+{
+  "AGENT": "CodiDev",
+  "VERSION": "3.0.0",
+  "IDENTIFIER": "codidev",
+  "ROUTING_SPECIALTY": "builder",
+  "INSTALLATION": "SUCCESS",
+  "REAL_EXECUTION": true,
+  "TOOLS_VERIFIED": [
+    {"outil": "python", "etat": "AVAILABLE", "preuve": "Python 3.14.7"},
+    {"outil": "git", "etat": "AVAILABLE", "preuve": "git version 2.53.0.windows.3"},
+    {"outil": "docker", "etat": "AVAILABLE", "preuve": "Docker version 29.7.2"},
+    {"outil": "node", "etat": "AVAILABLE", "preuve": "v26.7.0"},
+    {"outil": "npm", "etat": "AVAILABLE", "preuve": "11.19.0"},
+    {"outil": "terminal/filesystem", "etat": "AVAILABLE", "preuve": "creation + lecture + stat reels"},
+    {"outil": "http_request (profil)", "etat": "AVAILABLE", "preuve": "appels reels a l'orchestrateur (201 puis 200)"},
+    {"outil": "memory_write/memory_read (profil)", "etat": "UNAVAILABLE", "preuve": "non exerces dans cette installation : aucun appel reel, donc non declares disponibles"}
+  ],
+  "FILES_CREATED": [
+    "SOUL.md",
+    "AGENT_SPEC.md",
+    "SKILL.md",
+    "tests/test_definition.py",
+    "tests/__init__.py",
+    "memory/README.md",
+    "memory/MEMORY.md",
+    "workspace/README.md",
+    "evidence.json",
+    "codidev_real_execution_test.txt",
+    "agent/codidev.json (renomme depuis agent/builder-agent.json)",
+    "agent/codidev.prompt.md (renomme depuis agent/builder-agent.prompt.md)"
+  ],
+  "FILES_VERIFIED": [
+    "agent/codidev.json",
+    "agent/codidev.prompt.md",
+    "codidev_real_execution_test.txt",
+    "tests/test_definition.py",
+    "memory/MEMORY.md",
+    "workspace/README.md",
+    "scripts/inscrire_orchestrateur.py",
+    "README.md",
+    "DESCRIPTION.md",
+    "CHANGELOG.md",
+    "SOUL.md",
+    "AGENT_SPEC.md",
+    "SKILL.md"
+  ],
+  "TESTS_EXECUTED": [
+    "python -m unittest discover -s tests -v  -> 11 tests",
+    "python scripts/verifier_depot.py          -> 15 controles",
+    "python scripts/inscrire_orchestrateur.py --dry-run (charge utile, rien envoye)",
+    "test -f / ls -lh / stat codidev_real_execution_test.txt",
+    "POST /api/v1/agents/enroll",
+    "POST /api/v1/agents/heartbeat + 5 x GET /api/v1/agents/me"
+  ],
+  "TESTS_PASSED": ["test_definition 11/11", "verifier_depot 15/15", "test d'execution reelle", "inscription HTTP 201", "presence 5/5 ONLINE"],
+  "TESTS_FAILED": [],
+  "ORCHESTRATOR_CHECK": {
+    "url": "https://api.cvlynk.com",
+    "endpoint": "POST /api/v1/agents/enroll",
+    "http": 201,
+    "agent_id": "agt_ff4e15a6d9524dfc",
+    "name": "CodiDev",
+    "role": "builder",
+    "capabilities": 19,
+    "capabilities_aligned_with_profile": true,
+    "presence": "5/5 echantillons ONLINE (last_seen_at progressant)",
+    "heartbeat": "tache planifiee toutes les minutes, 8 battements sur ~80 s (seuil serveur 60 s)",
+    "relecture": "GET /api/v1/agents/me -> HTTP 200, instance hermes-codidev-01"
+  },
+  "GIT_CHECK": {
+    "branch": "main",
+    "remote": "https://github.com/Elfried002/builder-agent.git",
+    "local_commit": "a_completer",
+    "pushed": false,
+    "note": "renseigne apres le push, par relecture distante"
+  },
+  "BLOCKERS": [],
+  "STATUS": "VERIFIED"
+}

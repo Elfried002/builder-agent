@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-verifier_agent_os.py — verifie l'enregistrement de Builder Agent sur une console Agent OS.
+verifier_agent_os.py — verifie l'enregistrement de CodiDev sur une console Agent OS.
 
 Principe : la relecture fait preuve, pas le code HTTP de l'ecriture.
 
@@ -55,7 +55,7 @@ def requete(url: str, jeton: str, charge: dict | None = None) -> tuple[int, dict
 
 
 def main(argv=None) -> int:
-    analyseur = argparse.ArgumentParser(description="Verifie Builder Agent sur une console Agent OS.")
+    analyseur = argparse.ArgumentParser(description="Verifie CodiDev sur une console Agent OS.")
     analyseur.add_argument("--base-url", default="http://127.0.0.1:3000")
     analyseur.add_argument("--nom", default=None, help="nom a retrouver (defaut : celui du profil)")
     analyseur.add_argument("--run", action="store_true", help="lance une execution de controle")
@@ -63,7 +63,7 @@ def main(argv=None) -> int:
     args = analyseur.parse_args(argv)
     base = args.base_url.rstrip("/")
 
-    profil = json.loads((RACINE / "agent" / "builder-agent.json").read_text(encoding="utf-8"))
+    profil = json.loads((RACINE / "agent" / "codidev.json").read_text(encoding="utf-8"))
     nom = args.nom or profil["name"]
     jeton = lire_jeton()
     if not jeton:

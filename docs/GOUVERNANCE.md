@@ -1,4 +1,4 @@
-# Gouvernance — Builder Agent
+# Gouvernance — CodiDev
 
 Règles opposables de l'agent. Elles voyagent avec le prompt système : tout orchestrateur,
 toute instance ou tout job qui fait tourner cet agent les hérite.

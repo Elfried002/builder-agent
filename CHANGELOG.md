@@ -3,6 +3,32 @@
 Toutes les modifications notables de Builder Agent sont consignées ici.
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · versionnage sémantique.
 
+## [3.0.0] — 2026-10-02
+
+### Modifié
+- **Renommage de l'agent : Builder Agent → CodiDev** (annexe A de la spécification v3.0.0).
+  Fichiers renommés : `agent/builder-agent.json` → `agent/codidev.json`,
+  `agent/builder-agent.prompt.md` → `agent/codidev.prompt.md`. 51 remplacements dans les
+  fichiers actifs ; la spécialité de routage `builder` est **conservée** (contrat
+  d'orchestration). Les anciennes identités ne subsistent que dans l'historique de ce fichier.
+- **Contrat d'orchestrateur corrigé** : `scripts/inscrire_orchestrateur.py` passe de
+  `POST /api/v1/agents/register` (route jamais exposée par le serveur) au contrat **vérifié**
+  `POST /api/v1/agents/enroll` avec `Authorization: Bearer <clé d'enregistrement>`,
+  `requested_name` obligatoire et traitement explicite de `401 / 409 / 429 / 503`.
+
+### Ajouté
+- `SOUL.md` (nature, vertus, interdits de langage) · `AGENT_SPEC.md` (spécification complète) ·
+  `SKILL.md` (dix règles opérationnelles) · `tests/test_definition.py` (suite réelle) ·
+  `memory/` (`README.md` + `MEMORY.md`, append-only) · `workspace/` · `evidence.json` (journal
+  de preuves) · `codidev_real_execution_test.txt` (test d'exécution réelle, §22).
+
+### Vérifié (preuves réelles)
+- `python -m unittest discover -s tests -v` → **11 tests, OK** ;
+- `python scripts/verifier_depot.py` → **15/15 contrôles verts**, 0 secret sur 39 fichiers ;
+- inscription réelle : `POST /api/v1/agents/enroll` → **201**, identité `agt_ff4e15a6d9524dfc`,
+  nom attribué **CodiDev**, rôle `builder`, 19 capacités alignées sur le profil ;
+- présence : **5/5 échantillons ONLINE** (`GET /api/v1/agents/me`, `last_seen_at` progressant).
+
 ## [1.0.1] — 2026-09-30
 
 ### Ajouté

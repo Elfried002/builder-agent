@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-verifier_depot.py — controle de coherence du depot Builder Agent.
+verifier_depot.py — controle de coherence du depot CodiDev.
 
 Verifie, sans reseau et sans secret :
-  1. le profil `agent/builder-agent.json` (JSON valide, champs obligatoires, bornes) ;
+  1. le profil `agent/codidev.json` (JSON valide, champs obligatoires, bornes) ;
   2. le prompt systeme pointe par `system_prompt_file` (existe, taille, sections obligatoires) ;
   3. la liste `skills.retenues` face aux competences presentes dans `skills/` ;
   4. chaque competence : `SKILL.md` avec frontmatter `name` / `description` ;
@@ -14,7 +14,7 @@ Verifie, sans reseau et sans secret :
 
 Usage :
   python scripts/verifier_depot.py
-  python scripts/verifier_depot.py --racine C:/chemin/vers/builder-agent
+  python scripts/verifier_depot.py --racine C:/chemin/vers/codidev
 """
 
 from __future__ import annotations
@@ -118,7 +118,7 @@ class Controle:
 
 
 def lire_profil(racine: Path, c: Controle) -> dict | None:
-    chemin = racine / "agent" / "builder-agent.json"
+    chemin = racine / "agent" / "codidev.json"
     if not chemin.is_file():
         c.ko("Profil present", f"fichier absent : {chemin}")
         return None
@@ -127,7 +127,7 @@ def lire_profil(racine: Path, c: Controle) -> dict | None:
     except json.JSONDecodeError as erreur:
         c.ko("Profil : JSON valide", str(erreur))
         return None
-    c.ok("Profil : JSON valide", "agent/builder-agent.json")
+    c.ok("Profil : JSON valide", "agent/codidev.json")
 
     manquants = [champ for champ in CHAMPS_PROFIL_OBLIGATOIRES if champ not in profil]
     if manquants:
@@ -301,7 +301,7 @@ def verifier_secrets(racine: Path, c: Controle) -> None:
 
 
 def main(argv=None) -> int:
-    analyseur = argparse.ArgumentParser(description="Controle de coherence du depot Builder Agent.")
+    analyseur = argparse.ArgumentParser(description="Controle de coherence du depot CodiDev.")
     analyseur.add_argument(
         "--racine",
         default=str(Path(__file__).resolve().parent.parent),
@@ -310,7 +310,7 @@ def main(argv=None) -> int:
     args = analyseur.parse_args(argv)
     racine = Path(args.racine).resolve()
 
-    print(f"Builder Agent — controle du depot : {racine}\n")
+    print(f"CodiDev — controle du depot : {racine}\n")
     c = Controle()
 
     profil = lire_profil(racine, c)

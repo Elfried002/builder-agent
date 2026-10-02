@@ -1,7 +1,7 @@
-# Bibliothèque de compétences — Builder Agent
+# Bibliothèque de compétences — CodiDev
 
 15 compétences **normatives** : leur contenu fait partie du contrat de travail de l'agent.
-Elles sont versionnées ici en textes complets, pour que la définition de Builder Agent reste
+Elles sont versionnées ici en textes complets, pour que la définition de CodiDev reste
 lisible, reproductible et auditable (les orchestrateurs n'ayant pas de chargeur de
 compétences, le prompt système n'en porte qu'un digest).
 
@@ -40,7 +40,7 @@ compétences, le prompt système n'en porte qu'un digest).
 
 ## Correspondance avec le profil
 
-`agent/builder-agent.json` → `skills.retenues` doit lister exactement ces 15 compétences.
+`agent/codidev.json` → `skills.retenues` doit lister exactement ces 15 compétences.
 Toute divergence est signalée par `scripts/verifier_depot.py` (le profil est la référence de
 ce que l'agent déclare porter ; la bibliothèque est la référence de ce qu'il peut appliquer).
 

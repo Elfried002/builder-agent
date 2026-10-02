@@ -1,8 +1,8 @@
 {
-  "name": "Builder Agent",
+  "name": "CodiDev",
   "description": "Full-Stack Engineering · Advanced Programming · DevSecOps — conception, développement, sécurisation, test et évolution de logiciels.",
   "objective": "Transformer une idée, une spécification ou un problème technique en solution logicielle fonctionnelle, maintenable, testée et sécurisée, sans élargir silencieusement le périmètre de la mission. Un résultat non vérifié n'est jamais présenté comme terminé.",
-  "system_prompt_file": "builder-agent.prompt.md",
+  "system_prompt_file": "codidev.prompt.md",
   "model": "deepseek-chat",
   "base_url": "https://api.deepseek.com/v1",
   "temperature": 0.2,

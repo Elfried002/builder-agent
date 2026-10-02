@@ -1,10 +1,10 @@
-# Builder Agent — description complète
+# CodiDev — description complète
 
 Document de référence : ce qu'est l'agent, ce qu'il sait faire, comment il est gouverné, où il
 tourne et ce qui a été **vérifié** (par opposition à ce qui est seulement déclaré). Il complète
 le [`README.md`](README.md) (présentation et démarrage rapide) et les documents de `docs/`.
 
-Dernière mise à jour : 2026-09-30 · état vérifié sur `https://api.cvlynk.com`.
+Dernière mise à jour : 2026-10-02 — **CodiDev v3.0.0** · état vérifié sur `https://api.cvlynk.com`.
 
 ---
 
@@ -12,12 +12,12 @@ Dernière mise à jour : 2026-09-30 · état vérifié sur `https://api.cvlynk.c
 
 | Champ | Valeur |
 |---|---|
-| Nom | Builder Agent |
+| Nom | CodiDev |
 | Spécialité (routage) | `builder` |
 | Rôle | Senior Full-Stack Engineer + Software Architect + DevSecOps Engineer |
 | Runtime | Hermes |
-| Instance locale | `hermes-builder-agent-01` |
-| `agent_id` plateforme | `agt_b73d0513a3f346b2` (attribué par l'orchestrateur, le 2026-09-30) |
+| Instance locale | `hermes-codidev-01` |
+| `agent_id` plateforme | `agt_ff4e15a6d9524dfc` (attribué par l'orchestrateur, le 2026-10-02) |
 | Modèle | `deepseek-chat` (`https://api.deepseek.com/v1`) — température `0.2`, `max_turns` `24` |
 | Outils | `http_request`, `current_time`, `memory_write`, `memory_read`, `web_search` (5) |
 | Langue | français par défaut ; anglais si la demande ou le projet l'exige |
@@ -27,7 +27,7 @@ Dernière mise à jour : 2026-09-30 · état vérifié sur `https://api.cvlynk.c
 
 L'identité (`agent_id`, nom définitif, rôle, statut) est **attribuée par l'orchestrateur** :
 l'agent la déclare, ne la choisit pas et ne l'usurpe jamais. Le nom peut être suffixé par le
-serveur (`Builder Agent (2)`) s'il est déjà pris.
+serveur (`CodiDev (2)`) s'il est déjà pris.
 
 ## 2. Mission
 
@@ -150,7 +150,7 @@ l'historique.
 ## 7. Format de sortie de chaque tâche
 
 ```
-BUILDER AGENT — TASK REPORT
+CODIDEV — TASK REPORT
 TASK:
 STATUS: SUCCESS | PARTIAL | BLOCKED | FAILED
 OBJECTIVE:
@@ -172,8 +172,8 @@ d'API).
 ## 8. Comment la définition est composée
 
 ```
-profil exécutable   agent/builder-agent.json      (modèle, outils, permissions, gouvernance)
-prompt système      agent/builder-agent.prompt.md (rôle, workflow, contraintes, sortie)
+profil exécutable   agent/codidev.json      (modèle, outils, permissions, gouvernance)
+prompt système      agent/codidev.prompt.md (rôle, workflow, contraintes, sortie)
         │ digest normatif
         ▼
 bibliothèque        skills/<compétence>/SKILL.md  (15 textes complets, versionnés)
@@ -217,19 +217,20 @@ jamais une valeur (ni même un suffixe). Le `.gitignore` exclut `.env`, `.env.*`
 | Élément | Valeur mesurée |
 |---|---|
 | Orchestrateur | `https://api.cvlynk.com` (`/health` → `ok`, service `multi-agent-orchestrator` v1.0.0) |
-| `agent_id` | `agt_b73d0513a3f346b2` |
-| Nom attribué par le serveur | Builder Agent |
+| `agent_id` | `agt_ff4e15a6d9524dfc` |
+| Nom attribué par le serveur | CodiDev |
 | Rôle attribué par le serveur | `builder` |
-| Enregistré le | 2026-09-30T19:50:36Z |
+| Enregistré le | 2026-10-02T12:04:45Z |
 | Capacités déclarées | 19 (alignées sur le profil) |
-| Statut | **ONLINE** — vérifié par échantillonnage : 6/6 puis 4/4 `GET /api/v1/agents/me`, `last_seen_at` progressant sans intervention |
+| Statut | **ONLINE** — vérifié par échantillonnage : 5/5 `GET /api/v1/agents/me`, `last_seen_at` progressant sans intervention (12:06:10 → 12:07:34 UTC) |
 | Maintien en ligne | tâche planifiée toutes les minutes, 8 battements sur ~80 s (seuil serveur d'inactivité : 60 s) |
 | Secrets | `ORCHESTRATOR_REGISTRATION_KEY`, `ORCHESTRATOR_API_KEY`, `ORCHESTRATOR_AGENT_TOKEN` dans un `.env` **hors du dépôt** |
 
-Fait daté à retenir : l'identité précédente (`agt_5a0af0d2ce044545`, enregistrée le 2026-09-24)
-n'est plus valable — son jeton a été refusé le 2026-09-30 et le serveur ne conservait plus sa
-trace. Le réenregistrement a produit une identité neuve, ce qui est le comportement attendu :
-**le jeton n'est jamais récupérable, il se renouvelle par un réenregistrement**.
+Fait daté à retenir : la chaîne des identités est **agt_5a0af0d2ce044545** (2026-09-24, Builder
+Agent, caduque) → **agt_b73d0513a3f346b2** (2026-09-30, Builder Agent, remplacée par le
+renommage) → **agt_ff4e15a6d9524dfc** (2026-10-02, CodiDev, identité courante). Un jeton d'agent
+n'est jamais récupérable : il se renouvelle par un réenregistrement, et une identité ancienne
+ne se réutilise pas.
 
 ## 12. Ce que l'agent n'est pas
 
@@ -241,7 +242,7 @@ Un livrable sans preuve n'est pas un livrable.
 ## 13. Contenu du dépôt
 
 ```
-builder-agent/
+codidev/
 ├── agent/            profil exécutable + prompt système (source de vérité de l'agent)
 ├── skills/           15 compétences normatives (textes complets) + index et provenance
 ├── docs/             ARCHITECTURE · CAPACITES · GOUVERNANCE · EXPLOITATION
@@ -260,9 +261,11 @@ builder-agent/
 
 ## 15. Points ouverts
 
-- `scripts/inscrire_orchestrateur.py` implémente `POST /api/v1/agents/register` alors que le
-  serveur cible expose `POST /api/v1/agents/enroll` (clé d'enregistrement en
-  `Authorization: Bearer`, `requested_name` obligatoire, réponses `401 / 409 / 429 / 503`).
-  À aligner sur le contrat vérifié.
+- **Anciennes identités côté orchestrateur** (`agt_5a0af0d2ce044545`, `agt_b73d0513a3f346b2`) :
+  elles ne sont plus alimentées par un heartbeat. Leur révocation est une **action
+  d'administration** (indisponible avec le seul jeton d'agent) — à faire depuis le tableau de
+  bord si l'on veut un registre propre.
 - Rappel de contrat : une clé d'enregistrement n'ouvre **que** `/enroll` — toute validation par
   une route de lecture produit un faux `401`.
+- Le dépôt a été renommé en place ; le **nom du dépôt GitHub** reste `builder-agent` tant qu'il
+  n'est pas renommé côté hébergeur (cela change l'URL de clone : décision à confirmer).
