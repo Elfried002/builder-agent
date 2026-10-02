@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codidev.local/schemas/security_allowlist.json",
+  "title": "SecurityAllowlist",
+  "description": "Exceptions de sécurité revues et traçables. Un scan ne peut pas être désactivé globalement : chaque exception cible une règle, un chemin, et porte une justification, un auteur et une date de revue. Les constatations couvertes sont supprimées du verdict mais restent visibles dans le rapport.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "entries"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1, "maximum": 1 },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rule", "path", "justification", "reviewed_by", "reviewed_at"],
+        "properties": {
+          "rule": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "Nom exact de la règle ou de l'outil couvert (ex. database-url-with-credentials)."
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024,
+            "description": "Motif glob relatif à la racine du dépôt (ex. legacy/**/SKILL.md)."
+          },
+          "justification": { "type": "string", "minLength": 8, "maxLength": 2000 },
+          "reviewed_by": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "reviewed_at": { "type": "string", "format": "date-time" },
+          "expires_at": { "type": ["string", "null"], "format": "date-time" }
+        }
+      }
+    }
+  }
+}

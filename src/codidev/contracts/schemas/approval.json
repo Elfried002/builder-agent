@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codidev.local/schemas/approval.json",
+  "title": "Approval",
+  "description": "Approbation humaine explicite d'une action. Le silence n'est jamais une approbation ; une approbation vaut pour l'action décrite, jamais pour une catégorie entière (00_VISION_GOVERNANCE/02_GOVERNANCE.md).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["approval_id", "request_id", "granted_by", "scope", "granted_at", "channel"],
+  "properties": {
+    "approval_id": { "type": "string", "minLength": 8, "maxLength": 128 },
+    "request_id": { "type": "string", "minLength": 8, "maxLength": 128 },
+    "granted_by": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action_id", "target"],
+      "properties": {
+        "action_id": { "type": "string", "minLength": 8, "maxLength": 128 },
+        "target": { "type": "string", "minLength": 1, "maxLength": 2048 }
+      },
+      "description": "Portée exacte de l'autorisation : identifiant d'action et ressource visée."
+    },
+    "granted_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": ["string", "null"], "format": "date-time" },
+    "channel": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Canal par lequel l'approbation a été donnée (ex. cli, control-channel)."
+    },
+    "note": { "type": ["string", "null"], "maxLength": 2000 }
+  }
+}

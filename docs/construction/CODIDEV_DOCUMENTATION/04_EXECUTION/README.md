@@ -1,0 +1,6 @@
+# 04 EXECUTION — Index
+
+- `00_EXECUTION_ENGINE.md`
+- `01_TOOL_ROUTER.md`
+- `02_WORKSPACE.md`
+- `03_EVIDENCE.md`

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codidev.local/schemas/policy_decision.json",
+  "title": "PolicyDecision",
+  "description": "Décision de politique rendue sur une ToolRequest. La politique et l'autorisation sont autoritaires en dehors du prompt (ADR-008) : une décision est traçable et reproductible, jamais déduite du texte du modèle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decision_id", "request_id", "outcome", "risk_class", "policy_id", "decided_at", "reasons"],
+  "properties": {
+    "decision_id": { "type": "string", "minLength": 8, "maxLength": 128 },
+    "request_id": { "type": "string", "minLength": 8, "maxLength": 128 },
+    "outcome": { "type": "string", "enum": ["ALLOW", "DENY", "REQUIRE_APPROVAL"] },
+    "risk_class": {
+      "type": "string",
+      "enum": [
+        "READ",
+        "LOW_WRITE",
+        "WRITE",
+        "SENSITIVE_WRITE",
+        "DESTRUCTIVE",
+        "EXTERNAL_SIDE_EFFECT",
+        "DEPLOYMENT",
+        "SECURITY_SENSITIVE"
+      ]
+    },
+    "policy_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Identifiant de la règle ou du jeu de règles appliqué (ex. security-gate@v1)."
+    },
+    "reasons": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1, "maxLength": 2000 },
+      "description": "Motifs exposables de la décision. Jamais de chain-of-thought privé."
+    },
+    "obligations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 500 },
+      "description": "Conditions à satisfaire avant exécution (ex. 'approval:human-gate', 'scan:secrets')."
+    },
+    "decided_at": { "type": "string", "format": "date-time" },
+    "tenant_id": { "type": ["string", "null"], "maxLength": 128 },
+    "project_id": { "type": ["string", "null"], "maxLength": 128 }
+  }
+}

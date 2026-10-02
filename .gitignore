@@ -1,4 +1,4 @@
-# Secrets et fichiers locaux — ne jamais committer
+# Secrets et configuration locale — ne jamais committer
 .env
 .env.*
 !.env.example
@@ -8,25 +8,34 @@
 *.p12
 *.pfx
 registration.key
-agent.token
+credentials.json
+service-account*.json
 
-# Journalisation et caches locaux
-*.log
-logs/
-__pycache__/
-*.py[cod]
+# Environnements et caches Python
 .venv/
 venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Sorties de vérification CodiDev (générées, reproductibles)
+var/
+artifacts/
+*.evidence.jsonl
+*.audit.jsonl
+security-report.json
 
 # Éditeurs et systèmes
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
-
-# Sorties de vérification
-verif/
-*.out.json

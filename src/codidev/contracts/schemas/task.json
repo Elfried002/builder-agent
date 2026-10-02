@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codidev.local/schemas/task.json",
+  "title": "Task",
+  "description": "Tâche du Task Engine (03_AGENT_CORE/04_TASK_ENGINE.md). Les transitions autorisées sont définies dans codidev.statuses.TASK_TRANSITIONS et vérifiées par les tests ; les transitions significatives sont observables via l'historique.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_id", "state", "objective", "created_at", "updated_at"],
+  "properties": {
+    "task_id": { "type": "string", "minLength": 8, "maxLength": 128 },
+    "state": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "ANALYZING",
+        "PROPOSED",
+        "WAITING_FOR_USER",
+        "IN_PROGRESS",
+        "BLOCKED",
+        "FAILED",
+        "EXECUTED",
+        "VERIFYING",
+        "VERIFIED",
+        "READY",
+        "COMPLETED",
+        "CANCELLED"
+      ]
+    },
+    "objective": { "type": "string", "minLength": 1, "maxLength": 4000 },
+    "tenant_id": { "type": ["string", "null"], "maxLength": 128 },
+    "project_id": { "type": ["string", "null"], "maxLength": 128 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to", "at"],
+        "properties": {
+          "from": { "type": ["string", "null"] },
+          "to": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "ANALYZING",
+              "PROPOSED",
+              "WAITING_FOR_USER",
+              "IN_PROGRESS",
+              "BLOCKED",
+              "FAILED",
+              "EXECUTED",
+              "VERIFYING",
+              "VERIFIED",
+              "READY",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "at": { "type": "string", "format": "date-time" },
+          "reason": { "type": ["string", "null"], "maxLength": 2000 }
+        }
+      }
+    }
+  }
+}

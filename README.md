@@ -1,186 +1,98 @@
 # CodiDev
 
-Agent autonome d'ingénierie logicielle : **Full-Stack Engineering · Advanced Programming · DevSecOps**.
-Conception, développement, sécurisation, test, correction et évolution de logiciels.
+CodiDev est un système d'ingénierie logicielle agentique : comprendre une demande, planifier le
+travail, l'exécuter par des outils contrôlés, vérifier le résultat, le sécuriser, déployer les
+projets autorisés et apprendre de l'expérience validée.
 
-Ce dépôt est la **source de vérité** de l'agent : sa définition exécutable (profil + prompt
-système), sa bibliothèque de compétences normative, sa gouvernance, et les scripts
-d'exécution locale dans Hermes — CodiDev est un agent **indépendant**.
+Boucle cœur : **Understand → Plan → Execute → Verify → Learn → Adapt → Improve**
 
-- Dépôt : `https://github.com/Elfried002/codidev` (l'ancienne URL `builder-agent` redirige ;
-  pour un clone existant : `git remote set-url origin https://github.com/Elfried002/codidev.git`)
-- Version : `3.0.0` — renommage Builder Agent → CodiDev, voir [`CHANGELOG.md`](CHANGELOG.md)
-- Règles opposables : [`SOUL.md`](SOUL.md) · [`AGENT_SPEC.md`](AGENT_SPEC.md) · [`SKILL.md`](SKILL.md)
-- Description complète et état vérifié : [`DESCRIPTION.md`](DESCRIPTION.md)
+- Spécification de référence (opposable) : [`docs/construction/CODIDEV_DOCUMENTATION/`](docs/construction/CODIDEV_DOCUMENTATION/)
+- État réel du dépôt avant construction : [`docs/construction/CONSTRUCTION_ASSESSMENT.md`](docs/construction/CONSTRUCTION_ASSESSMENT.md)
+- Plan de construction : [`docs/construction/BUILD_PLAN.md`](docs/construction/BUILD_PLAN.md)
+- Rapport de Phase 0 et preuves d'exécution : [`docs/PHASE_0_REPORT.md`](docs/PHASE_0_REPORT.md)
+- Décisions d'architecture : [`docs/adr/`](docs/adr/)
+- Définition historique (agent v3.x, conservée, hors service) : [`legacy/agent-definition-v3/`](legacy/agent-definition-v3/)
 
----
+## État : Phase 0 — Foundation
 
-## 1. Identité
+Ce dépôt contient le **cœur agentique** en construction. La Phase 0 livre ce qui est réellement
+exécutable et vérifiable aujourd'hui, et rien de plus :
 
-| Champ | Valeur |
+| Livrable Phase 0 | État |
 |---|---|
-| Nom | CodiDev |
-| Spécialité (routage) | `builder` |
-| Rôle | Senior Full-Stack Engineer + Software Architect + DevSecOps Engineer |
-| Runtime | Hermes |
-| Exécution | locale dans Hermes · agent **indépendant** (aucune plateforme) |
-| Modèle | `deepseek-chat` (api.deepseek.com/v1) — température `0.2`, `max_turns` `24` |
-| Outils | `http_request`, `web_search`, `memory_write`, `memory_read`, `current_time` |
-| Langue | Français par défaut ; anglais si la demande ou le projet l'exige |
-| Compétences | 15 compétences normatives (catalogue ECC, `affaan-m/ECC@bf70150`) |
+| Vocabulaires canoniques (statuts, états de tâche, classes de risque, sévérités) | implémenté |
+| 9 contrats JSON Schema (Action, ToolRequest, RiskClass, PolicyDecision, Approval, Evidence, AuditRecord, Task, SecurityAllowlist) | implémenté |
+| Magasin de preuves append-only, chaîné par SHA-256, caviardé | implémenté |
+| Journal d'audit append-only, chaîné et séquencé | implémenté |
+| Détection de secrets (16 règles) + caviardage idempotent | implémenté |
+| Security Gate (CRITICAL/HIGH → BLOCK) avec codes de sortie | implémenté |
+| Exceptions de sécurité revues et traçables (ADR-0007) | implémenté |
+| Adaptateurs SAST/SCA/lint (bandit, pip-audit, ruff) | implémenté |
+| Interface en ligne de commande | implémenté |
+| Tests | 127 tests réels |
+| Agent Core, Execution, Connectors, Memory/Learning, plateforme | **Phases 1 à 8 — non commencées** |
 
-CodiDev est un agent **indépendant** : aucune plateforme ne lui attribue d'identité. Son identité est
-celle de sa définition (`codidev`), versionnée dans ce dépôt — elle ne s'usurpe jamais, et aucune
-identité de plateforme n'est requise pour l'exécuter.
+Aucun module ne simule une capacité non implémentée : les sous-systèmes des phases suivantes
+n'existent pas encore dans ce dépôt.
 
-## 2. Mission
+## Prérequis
 
-> Transformer une idée, une spécification ou un problème technique en solution logicielle
-> fonctionnelle, maintenable, testée et sécurisée, sans élargir silencieusement le périmètre
-> de la mission. **Un résultat non vérifié n'est jamais présenté comme terminé.**
+- Python **3.12** (version isolée gérée par `uv`, hors de tout environnement tiers)
+- `uv` pour créer l'environnement et reproduire les dépendances depuis `uv.lock`
 
-## 3. Spécialités et capacités
+Aucune dépendance système n'est requise. Aucun accès réseau n'est nécessaire pour valider les
+contrats, écrire des preuves ou vérifier un journal.
 
-Trois spécialités structurent l'agent ; **dix-neuf capacités déclarées** en découlent et servent
-de base à la description de son périmètre.
-
-### Spécialité 1 — Full-Stack Engineering
-`full-stack engineering` · `advanced programming` · `frontend patterns` · `react performance` ·
-`frontend accessibility` · `backend patterns` · `api design` · `fastapi patterns` · `error handling`
-
-### Spécialité 2 — Software Architecture
-`software architecture` · `hexagonal architecture` · `architecture decision records` ·
-`database migrations`
-
-### Spécialité 3 — DevSecOps
-`devsecops` · `docker patterns` · `deployment patterns` · `python testing` · `end-to-end testing` ·
-`coding standards`
-
-Le détail (capacité → compétence normative → preuve attendue) est dans
-[`docs/CAPACITES.md`](docs/CAPACITES.md).
-
-## 4. Workflow (7 phases)
-
-1. **DISCOVERY** — comprendre la mission, inspecter l'existant, cartographier le périmètre.
-2. **ANALYSIS & ARCHITECTURE** — architecture, dépendances, données, APIs, authentification,
-   surface d'attaque ; stratégie de tests.
-3. **IMPLEMENTATION** — séparation des responsabilités, validation des entrées, gestion des
-   erreurs, journalisation, secrets gérés proprement, contrôles d'accès.
-4. **TEST & SECURITY** — build, lint, tests unitaires / intégration / E2E, SAST, SCA, scan de
-   secrets ; tests dynamiques **uniquement sur cible autorisée**.
-5. **VALIDATION** — compilation, démarrage, fonctionnalités, sécurité, régressions,
-   configuration, migrations, journaux, documentation.
-6. **DELIVERY** — code, tests, documentation, changelog, rapport technique ou de sécurité,
-   instructions de déploiement.
-7. **MEMORY** — consigner décisions, conventions durables, problèmes connus.
-
-## 5. Gouvernance (résumé)
-
-- **Autorisé** : READ, WRITE, EXECUTE dans l'environnement de travail.
-- **Autorisation explicite requise** : DELETE, DEPLOY, SEND.
-- **Human Gate** : action irréversible · déploiement en production · décision d'architecture
-  majeure · remédiation d'un risque critique à fort impact · données sensibles non prévues ·
-  ambiguïté critique · conflit exigence métier / politique de sécurité.
-- **Interdits** : exfiltrer des données ou voler des secrets · contourner un mécanisme de
-  sécurité · tester offensivement une cible non autorisée · modifier le travail d'un autre
-  agent sans mandat · déclarer un succès sans preuve · présenter une hypothèse comme un fait.
-
-Matrice complète : [`docs/GOUVERNANCE.md`](docs/GOUVERNANCE.md).
-
-## 6. Format de sortie (chaque tâche)
-
-```
-CODIDEV — TASK REPORT
-TASK:
-STATUS: SUCCESS | PARTIAL | BLOCKED | FAILED
-OBJECTIVE:
-CHANGES:
-FILES MODIFIED:
-TESTS:
-SECURITY:
-EVIDENCE:
-ISSUES:
-OPEN POINTS:
-NEXT ACTION:
-```
-
-Distinction permanente : **FAIT · HYPOTHÈSE · ERREUR · RISQUE · POINT OUVERT**.
-Question de contrôle : *« Comment sais-tu que ce que tu viens de faire fonctionne ? »* — la
-réponse repose sur des preuves concrètes, jamais sur une affirmation.
-
-## 7. Contenu du dépôt
-
-```
-codidev/
-├── agent/
-│   ├── codidev.json          # profil exécutable (modèle, outils, permissions, gouvernance)
-│   └── codidev.prompt.md     # prompt système complet — incarne la spécification
-├── skills/                         # bibliothèque normative : 15 compétences (textes complets)
-│   ├── README.md                   # index, domaine → compétence, provenance
-│   └── <compétence>/SKILL.md
-├── docs/
-│   ├── ARCHITECTURE.md             # comment l'agent est composé et exécuté
-│   ├── CAPACITES.md                # 19 capacités → compétences → preuves
-│   ├── GOUVERNANCE.md              # permissions, Human Gate, interdits, politique mémoire
-│   └── EXPLOITATION.md             # enregistrement, vérification, pièges, dépannage
-├── scripts/
-│   └── verifier_depot.py           # cohérence du dépôt + scan de secrets
-├── integrations/agent-os/          # ponts optionnels (hors définition de l'agent)
-├── archive/orchestrateur/          # artefacts historiques, hors service
-├── INTERFACE_WEB.md                # spécification de l'interface web
-├── PROMPT_LOVABLE.md               # prompt prêt à coller (construction de l'interface)
-├── CHANGELOG.md
-└── LICENSE
-```
-
-## 8. Démarrage rapide
-
-**Vérifier la cohérence du dépôt** (profil valide, compétences présentes, aucun secret) :
+## Installation de l'environnement
 
 ```bash
-python scripts/verifier_depot.py
+scripts/bootstrap_env.sh        # crée/rafraîchit l'environnement isolé, hors du dépôt
 ```
 
-**Enregistrer l'agent** sur une console Agent OS (le jeton se lit dans l'environnement et ne
-s'affiche jamais) :
+L'environnement est créé dans `~/.local/share/codidev/venv` et n'est jamais versionné.
+
+## Utilisation
 
 ```bash
-export AGENT_OS_ADMIN_TOKEN=...            # jamais dans le dépôt, jamais en clair dans le chat
-python scripts/enregistrer_agent_os.py --base-url http://127.0.0.1:3000 --dry-run
-python scripts/enregistrer_agent_os.py --base-url http://127.0.0.1:3000
+# Contrats
+codidev contracts list
+codidev contracts show evidence
+codidev contracts validate evidence mon-document.json
+
+# Sécurité : scan complet + verdict du gate (0 = PASS, 1 = REVIEW, 2 = BLOCK)
+codidev security scan .
+codidev security scan src/ --policy strict --json "$HOME/.local/share/codidev/artifacts/rapport.json"
+codidev security secrets .
+codidev security secrets . --no-allowlist   # ignore les exceptions revues, montre tout
+
+# Journaux : intégrité de la chaîne de hachage
+codidev journal verify artifacts/preuves.jsonl --contract evidence
+codidev journal verify artifacts/audit.jsonl --contract audit_record
 ```
 
-**Vérifier l'enregistrement** — la relecture, et elle seule, fait preuve (un HTTP 201 ne
-prouve rien) :
+## Vérifier le dépôt
 
 ```bash
-python scripts/verifier_agent_os.py --base-url http://127.0.0.1:3000
-python scripts/verifier_agent_os.py --base-url http://127.0.0.1:3000 --run   # exécution de contrôle
+scripts/verify.sh          # lint, SAST, SCA, scan de secrets, tests, gate de sécurité
 ```
 
-## 9. Frontière de sécurité
+Le script échoue si un contrôle échoue. Un outil de sécurité absent est signalé comme
+`NOT_EXECUTED` et n'est jamais compté comme un contrôle réussi.
 
-Les outils offensifs ou de sécurité ne s'emploient que dans un environnement autorisé :
-laboratoire, bac à sable, test, ou infrastructure explicitement autorisée par écrit.
+## Exceptions de sécurité
 
-Cet agent **ne** : décide pas à la place du propriétaire · ne déploie pas en production sans
-autorisation · ne supprime pas de façon destructive sans autorisation · n'exfiltre aucune
-donnée et ne vole aucun secret · ne contourne aucun mécanisme de sécurité · ne teste pas
-offensivement une cible non autorisée · ne modifie pas le travail d'un autre agent sans
-mandat · ne présente pas une hypothèse comme un fait · ne déclare pas un succès sans preuve.
+Un scan peut légitimement rencontrer du bruit : documentations contenant des identifiants de
+démonstration, exemples de configuration. La réponse n'est pas de désactiver une règle, mais de
+déclarer une exception **revue, datée et justifiée** dans `.codidev-security-allowlist.json`
+(ADR-0007). Une exception retire la constatation du verdict, jamais du rapport.
 
-## 10. Secrets
+## Règles opposables
 
-Aucun secret dans ce dépôt : ni clé d'API, ni jeton d'agent, ni clé d'enregistrement, ni mot
-de passe. Les scripts lisent leurs secrets depuis l'environnement ou un fichier `.env.local`
-**hors du dépôt**, et n'impriment jamais qu'un suffixe masqué. `scripts/verifier_depot.py`
-échoue si un secret est détecté.
-
-## 11. Provenance
-
-Les compétences de `skills/` proviennent du catalogue **ECC** (`affaan-m/ECC`, commit
-`bf70150`) et sont conservées ici en textes complets pour que la définition de l'agent reste
-lisible, versionnée et reproductible. Voir [`skills/README.md`](skills/README.md).
+1. **Preuve sur affirmation** — un résultat non vérifié n'est jamais présenté comme terminé.
+2. **Aucun secret** dans le dépôt, la mémoire, les journaux, les preuves ou les sorties console.
+3. **Aucun contournement de politique** — le modèle propose, la politique décide.
+4. **Aucun élargissement silencieux de périmètre**.
+5. **Aucune capacité factice** — un module absent n'est pas simulé.
 
 ## Licence
 

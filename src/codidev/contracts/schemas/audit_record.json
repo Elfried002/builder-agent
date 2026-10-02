@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codidev.local/schemas/audit_record.json",
+  "title": "AuditRecord",
+  "description": "Enregistrement d'audit (13_OPERATIONS/03_AUDIT.md) : qui, quel tenant, quel projet, quelle action, quelle ressource, quand, quel risque, quel résultat de politique, quelle approbation, quel outil, quel résultat, quelle preuve. Le journal est append-only et chaîné par hachage.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["seq", "timestamp", "actor", "action", "resource", "risk_class", "result", "prev_hash", "hash"],
+  "properties": {
+    "seq": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Numéro de séquence, strictement croissant à partir de 0."
+    },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "actor": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "tenant_id": { "type": ["string", "null"], "maxLength": 128 },
+    "project_id": { "type": ["string", "null"], "maxLength": 128 },
+    "action": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "resource": { "type": "string", "minLength": 1, "maxLength": 2048 },
+    "risk_class": {
+      "type": "string",
+      "enum": [
+        "READ",
+        "LOW_WRITE",
+        "WRITE",
+        "SENSITIVE_WRITE",
+        "DESTRUCTIVE",
+        "EXTERNAL_SIDE_EFFECT",
+        "DEPLOYMENT",
+        "SECURITY_SENSITIVE"
+      ]
+    },
+    "policy_decision_id": { "type": ["string", "null"], "maxLength": 128 },
+    "approval_id": { "type": ["string", "null"], "maxLength": 128 },
+    "tool": { "type": ["string", "null"], "maxLength": 128 },
+    "result": {
+      "type": "string",
+      "enum": ["NOT_EXECUTED", "BLOCKED", "FAILED", "WAITING_FOR_USER", "EXECUTED", "VERIFIED"]
+    },
+    "evidence_id": { "type": ["string", "null"], "maxLength": 128 },
+    "prev_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codidev.local/schemas/evidence.json",
+  "title": "Evidence",
+  "description": "Preuve d'exécution (04_EXECUTION/03_EVIDENCE.md). Un résultat n'est VERIFIED que si ses critères de vérification ont été satisfaits ; une entrée de preuve ne décrit jamais une action qui n'a pas été réellement exécutée.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["evidence_id", "operation", "status", "recorded_at"],
+  "properties": {
+    "evidence_id": { "type": "string", "minLength": 8, "maxLength": 128 },
+    "operation": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "status": {
+      "type": "string",
+      "enum": ["NOT_EXECUTED", "BLOCKED", "FAILED", "WAITING_FOR_USER", "EXECUTED", "VERIFIED"]
+    },
+    "actor": { "type": ["string", "null"], "maxLength": 128 },
+    "tenant_id": { "type": ["string", "null"], "maxLength": 128 },
+    "project_id": { "type": ["string", "null"], "maxLength": 128 },
+    "tool": { "type": ["string", "null"], "maxLength": 128 },
+    "resource": { "type": ["string", "null"], "maxLength": 2048 },
+    "started_at": { "type": ["string", "null"], "format": "date-time" },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" },
+    "recorded_at": { "type": "string", "format": "date-time" },
+    "commands": { "type": "array", "items": { "type": "string", "maxLength": 4000 } },
+    "files": { "type": "array", "items": { "type": "string", "maxLength": 2048 } },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "status"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 512 },
+          "status": {
+            "type": "string",
+            "enum": ["NOT_EXECUTED", "BLOCKED", "FAILED", "WAITING_FOR_USER", "EXECUTED", "VERIFIED"]
+          },
+          "detail": { "type": ["string", "null"], "maxLength": 4000 }
+        }
+      }
+    },
+    "security": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tool", "status"],
+        "properties": {
+          "tool": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "status": {
+            "type": "string",
+            "enum": ["NOT_EXECUTED", "BLOCKED", "FAILED", "WAITING_FOR_USER", "EXECUTED", "VERIFIED"]
+          },
+          "summary": { "type": ["string", "null"], "maxLength": 4000 }
+        }
+      }
+    },
+    "errors": { "type": "array", "items": { "type": "string", "maxLength": 4000 } },
+    "warnings": { "type": "array", "items": { "type": "string", "maxLength": 4000 } },
+    "external_ids": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "maxLength": 512 },
+      "description": "Identifiants d'objets externes réellement observés (commit, run, déploiement)."
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["criteria", "performed", "passed"],
+      "properties": {
+        "criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1, "maxLength": 1000 }
+        },
+        "performed": { "type": "boolean" },
+        "passed": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "performed": { "const": false } }, "required": ["performed"] },
+          "then": { "properties": { "passed": { "const": false } } }
+        }
+      ],
+      "description": "Critères de vérification ; `passed` ne peut être vrai que si `performed` est vrai."
+    },
+    "prev_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

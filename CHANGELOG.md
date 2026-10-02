@@ -1,102 +1,64 @@
-# Changelog
+# Changelog — CodiDev
 
-Toutes les modifications notables de Builder Agent sont consignées ici.
-Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · versionnage sémantique.
+Toutes les modifications notables de ce dépôt sont consignées ici.
+Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versionnage sémantique.
 
-## [3.1.0] — 2026-10-02
+## [0.1.0] — Phase 0 : Foundation
+
+Première phase de construction du cœur CodiDev, conforme à
+`docs/construction/CODIDEV_DOCUMENTATION/`. Rien n'est déclaré terminé sans exécution réelle.
+
+### Ajouté
+
+- **Vocabulaires canoniques** (`codidev.statuses`) : statuts d'opération, états de tâche et
+  table des transitions autorisées, classes de risque, sévérités, verdicts de gate et de
+  politique. `OperationStatus.implies_completion` n'est vraie que pour `VERIFIED` : une action
+  exécutée n'est jamais une action réussie.
+- **8 contrats JSON Schema 2020-12** (`codidev.contracts`) : `action`, `tool_request`,
+  `risk_class`, `policy_decision`, `approval`, `evidence`, `audit_record`, `task`. Résolution
+  hors ligne des `$ref` via un registre local.
+- **Magasin de preuves** (`codidev.evidence`) : append-only, chaîné par SHA-256, validé par
+  contrat, caviardé avant écriture.
+- **Journal d'audit** (`codidev.audit`) : append-only, chaîné, à séquence strictement croissante,
+  avec vérification de la continuité.
+- **Détection de secrets** (`codidev.security.secrets`) : 16 règles (clés privées, jetons GitHub,
+  AWS, Google, Slack, Stripe, Supabase, URL de base de données avec mot de passe, JWT, jetons
+  porteurs, affectations à nom évocateur) plus filtrage par entropie, et caviardage récursif.
+- **Security Gate** (`codidev.security.gate`) : politique par défaut `CRITICAL → BLOCK`,
+  `HIGH → BLOCK`, `MEDIUM → REVIEW`, `LOW → WARNING`, `INFO → INFORMATIONAL`, avec codes de
+  sortie 0/1/2 et politique `strict` disponible.
+- **Adaptateurs d'outils** (`codidev.security.tools`) : `ruff`, `bandit`, `pip-audit`, avec
+  distinction explicite `EXECUTED` / `NOT_EXECUTED` / `FAILED`.
+- **Interface en ligne de commande** (`codidev`) : `contracts`, `security`, `journal`, `version`.
+- **Tests réels** (`tests/`) : contrats, chaînage, altération détectée, caviardage, gate,
+  adaptateurs, cohérence entre les schémas et les vocabulaires Python.
+- **ADR-0001 à ADR-0006** : dépôt unique, séparation construction/runtime, baseline de sécurité,
+  contrats comme frontière, journalisation chaînée, isolation d'exécution.
 
 ### Modifié
-- **CodiDev devient un agent indépendant.** Détaché de l'orchestrateur multi-agents : plus
-  aucune inscription, plus aucun heartbeat, aucune identité de plateforme. Le script
-  `scripts/inscrire_orchestrateur.py` est retiré du dépôt ; les artefacts de la période
-  « orchestrateur » sont archivés sous `archive/orchestrateur/` ; les ponts optionnels vers une
-  console d'administration locale sont déplacés sous `integrations/agent-os/`, explicitement
-  **hors définition de l'agent**.
-- Déconnexion **prouvée** : tâche planifiée de heartbeat supprimée, amorces de heartbeat
-  supprimées, identifiants mis en quarantaine **hors du dépôt**, constat serveur `OFFLINE`
-  après arrêt des émissions. La révocation définitive de l'identité de plateforme relève d'une
-  session d'administration (le jeton d'agent répond `401`).
 
-### Ajouté
-- `INTERFACE_WEB.md` — spécification produit de l'interface web : écrans, modèle de données,
-  vocabulaire de statuts, direction visuelle, critères d'acceptation.
-- `PROMPT_LOVABLE.md` — prompt prêt à coller pour construire cette interface avec Lovable, et
-  consignes de relecture après la première génération.
+- **Restructuration du dépôt.** La définition d'agent v3.1.0 qui occupait la racine est
+  déplacée **intégralement et sans suppression** sous `legacy/agent-definition-v3/`. Ses tests
+  (15) et son vérificateur (15 contrôles) passent depuis leur nouvel emplacement ; cette
+  exécution est la preuve que la préservation est réelle et non déclarative.
+- Le coeur CodiDev occupe désormais la racine du dépôt conformément à ADR-0001 et ADR-0002.
 
-## [3.0.0] — 2026-10-02
+### Sécurité
 
-### Modifié
-- **Renommage de l'agent : Builder Agent → CodiDev** (annexe A de la spécification v3.0.0).
-  Fichiers renommés : `agent/builder-agent.json` → `agent/codidev.json`,
-  `agent/builder-agent.prompt.md` → `agent/codidev.prompt.md`. 51 remplacements dans les
-  fichiers actifs ; la spécialité de routage `builder` est **conservée** (contrat
-  d'orchestration). Les anciennes identités ne subsistent que dans l'historique de ce fichier.
-- **Contrat d'orchestrateur corrigé** : `scripts/inscrire_orchestrateur.py` passe de
-  `POST /api/v1/agents/register` (route jamais exposée par le serveur) au contrat **vérifié**
-  `POST /api/v1/agents/enroll` avec `Authorization: Bearer <clé d'enregistrement>`,
-  `requested_name` obligatoire et traitement explicite de `401 / 409 / 429 / 503`.
-- **Renommage du dépôt GitHub** : `Elfried002/builder-agent` → `Elfried002/codidev` (l'ancienne
-  URL redirige ; pour un clone existant : `git remote set-url origin
-  https://github.com/Elfried002/codidev.git`). Description du dépôt mise à jour pour nommer
-  l'agent.
-
-### Ajouté
-- `SOUL.md` (nature, vertus, interdits de langage) · `AGENT_SPEC.md` (spécification complète) ·
-  `SKILL.md` (dix règles opérationnelles) · `tests/test_definition.py` (suite réelle) ·
-  `memory/` (`README.md` + `MEMORY.md`, append-only) · `workspace/` · `evidence.json` (journal
-  de preuves) · `codidev_real_execution_test.txt` (test d'exécution réelle, §22).
-
-### Vérifié (preuves réelles)
-- `python -m unittest discover -s tests -v` → **11 tests, OK** ;
-- `python scripts/verifier_depot.py` → **15/15 contrôles verts**, 0 secret sur 39 fichiers ;
-- inscription réelle : `POST /api/v1/agents/enroll` → **201**, identité `agt_ff4e15a6d9524dfc`,
-  nom attribué **CodiDev**, rôle `builder`, 19 capacités alignées sur le profil ;
-- présence : **5/5 échantillons ONLINE** (`GET /api/v1/agents/me`, `last_seen_at` progressant).
-
-## [1.0.1] — 2026-09-30
-
-### Ajouté
-- **`DESCRIPTION.md`** — description complète et opposable de l'agent : identité, mission,
-  3 spécialités et 19 capacités, 15 compétences normatives, workflow en 7 phases, gouvernance,
-  format de sortie, composition de la définition, exploitation, frontière de sécurité, état
-  vérifié sur l'orchestrateur, points ouverts.
-
-### Corrigé
-- **README** — total de capacités ramené de 20 à **19** (aligné sur `docs/CAPACITES.md` et sur
-  le registre de l'orchestrateur) ; `agent_id` plateforme mis à jour vers l'identité attribuée
-  au réenregistrement du 2026-09-30.
+- **Vulnérabilité réelle détectée et corrigée** : `pip-audit` a signalé `PYSEC-2026-1845` sur
+  `pytest==9.0.1` ; dépendance portée à `9.0.3`. Le gate a bloqué avant correction.
+- **Exceptions de sécurité revues** (`.codidev-security-allowlist.json`) : règle, chemin,
+  justification, auteur et date de revue. Une constatation couverte quitte le verdict, jamais le
+  rapport ; une exception qui ne couvre plus rien fait échouer un test (ADR-0007).
+- Filtrage par entropie et par nature de valeur : les expressions de code, les gabarits
+  d'interpolation et les mots de passe masqués ne sont plus signalés.
+- Caviardage **idempotent** : un texte déjà caviardé n'est plus jamais détecté comme secret.
 
 ### Notes
-- L'identité `agt_5a0af0d2ce044545` (2026-09-24) est **caduque** : son jeton a été refusé le
-  2026-09-30 et le serveur n'en conservait plus la trace. Un jeton d'agent ne se récupère pas,
-  il se renouvelle par un réenregistrement (`POST /api/v1/agents/enroll`).
-- Rappel de contrat : la clé d'enregistrement n'ouvre **que** `/enroll` ; la valider par une
-  route de lecture (`GET /agents`, `GET /agents/me`) produit un faux `401`.
 
-## [1.0.0] — 2026-09-24
-
-### Ajouté
-- **Définition exécutable de l'agent** : `agent/builder-agent.json` (profil) et
-  `agent/builder-agent.prompt.md` (prompt système v1.0) — rôle, mission, périmètre, workflow
-  en 7 phases, contraintes, permissions graduées, Human Gate, conditions d'arrêt, comportement
-  d'échec, preuves, format de sortie, politique mémoire.
-- **Bibliothèque normative** : 15 compétences (textes complets) — conventions, API, backend,
-  frontend, données, tests, industrialisation, architecture.
-- **Gouvernance** : permissions READ/WRITE/EXECUTE autorisées ; DELETE/DEPLOY/SEND sur
-  autorisation explicite ; 7 déclencheurs de Human Gate ; 6 interdits ; mode autonome borné.
-- **Identité déclarée** : spécialité `builder`, instance `hermes-builder-agent-01`,
-  19 capacités réparties en 3 spécialités (Full-Stack Engineering, Software Architecture,
-  DevSecOps) ; outillage LLM `deepseek-chat`, 5 outils, 24 tours.
-- **Outillage d'exploitation** :
-  - `scripts/verifier_depot.py` — cohérence du dépôt (profil, compétences, outils, prompt) et
-    détection de secrets ;
-  - `scripts/enregistrer_agent_os.py` — enregistrement sur une console Agent OS ;
-  - `scripts/verifier_agent_os.py` — vérification par relecture + exécution de contrôle ;
-  - `scripts/inscrire_orchestrateur.py` — inscription (métadonnées) sur un orchestrateur
-    multi-agents, capacités dérivées du profil.
-- **Documentation** : README, `docs/ARCHITECTURE.md`, `docs/CAPACITES.md`,
-  `docs/GOUVERNANCE.md`, `docs/EXPLOITATION.md`, `skills/README.md`.
-
-### Notes
-- Un enregistrement réussi (HTTP 201) ne vaut pas agent opérationnel : la preuve est la
-  relecture de la fiche puis une exécution réelle.
+- Aucun push n'a été effectué au moment de cette entrée : le contrôle final revient au
+  propriétaire du dépôt.
+- Toolchain isolée : CPython 3.12 géré par `uv`, environnement dans `~/.local/share/codidev/`,
+  dépendances épinglées dans `pyproject.toml` et verrouillées dans `uv.lock`.
+- 127 tests ; gate de sécurité `PASS` ; lint et format verts. Preuves d'exécution :
+  `docs/PHASE_0_REPORT.md`.

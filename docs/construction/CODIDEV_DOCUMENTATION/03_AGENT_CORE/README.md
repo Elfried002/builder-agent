@@ -1,0 +1,7 @@
+# 03 AGENT CORE — Index
+
+- `00_AGENT_CORE.md`
+- `01_CONTEXT_ENGINE.md`
+- `02_PLANNER.md`
+- `03_DECISION_ENGINE.md`
+- `04_TASK_ENGINE.md`

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codidev.local/schemas/action.json",
+  "title": "Action",
+  "description": "Action candidate proposée par le Planner ou le LLM. Une Action n'est jamais exécutée en l'état : elle traverse Identity -> Tenant -> Resource Scope -> Risk -> Policy -> Approval -> Tool -> Evidence. Aucun chemin LLM -> outil non contrôlé n'est autorisé (04_EXECUTION/00_EXECUTION_ENGINE.md).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["action_id", "kind", "tool", "target", "tenant_id", "requested_at"],
+  "properties": {
+    "action_id": { "type": "string", "minLength": 8, "maxLength": 128 },
+    "kind": { "$ref": "#/$defs/risk_class" },
+    "tool": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Nom de l'outil ou de l'opération visée (jamais une commande shell arbitraire)."
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "description": "Ressource visée : chemin, identifiant de dépôt, nom de projet, URL autorisée."
+    },
+    "parameters": { "type": "object", "description": "Paramètres structurés de l'action." },
+    "tenant_id": { "$ref": "#/$defs/identifier" },
+    "project_id": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }] },
+    "requested_by": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "requested_at": { "type": "string", "format": "date-time" },
+    "rationale": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Justification exposable. Jamais de chain-of-thought privé (02_ARCHITECTURE/02_DECISION_FLOW.md)."
+    },
+    "dry_run": { "type": "boolean", "default": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "risk_class": {
+      "type": "string",
+      "enum": [
+        "READ",
+        "LOW_WRITE",
+        "WRITE",
+        "SENSITIVE_WRITE",
+        "DESTRUCTIVE",
+        "EXTERNAL_SIDE_EFFECT",
+        "DEPLOYMENT",
+        "SECURITY_SENSITIVE"
+      ]
+    }
+  }
+}
