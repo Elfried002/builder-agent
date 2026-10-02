@@ -83,22 +83,22 @@ describe('détection par règle', () => {
 });
 
 describe('non-valeurs : ne pas signaler du bruit', () => {
-  it('ignore une valeur de faible entropie', () => {
+  it('I-31 : ignore une valeur de faible entropie', () => {
     expect(rulesOf(`token = ${'"'}${'a'.repeat(24)}${'"'}`).size).toBe(0);
   });
 
-  it('ignore une valeur d’exemple', () => {
+  it('I-31 : ignore une valeur d’exemple', () => {
     expect(rulesOf(`password = ${'"changeme"'}`).size).toBe(0);
   });
 
-  it('ignore le texte ordinaire', () => {
+  it('I-31 : ignore le texte ordinaire', () => {
     const texte =
       'Le plan contient trois étapes et un critère de vérification.\n' +
       'tokenization du texte et répartition des rôles.\n';
     expect(rulesOf(texte).size).toBe(0);
   });
 
-  it('ne traverse pas un accès d’attribut ni un appel', () => {
+  it('I-31 : ne traverse pas un accès d’attribut ni un appel', () => {
     // Cas réellement rencontrés : sans cette contrainte, du code légitime serait signalé.
     expect(rulesOf('const token = req.headers.authorization;').size).toBe(0);
     expect(rulesOf('hashed_password = pwd_context.hash(payload.password)').size).toBe(0);
@@ -106,7 +106,7 @@ describe('non-valeurs : ne pas signaler du bruit', () => {
     expect(rulesOf('allow_credentials = settings.allow_credentials').size).toBe(0);
   });
 
-  it('ignore les gabarits d’interpolation', () => {
+  it('I-31 : ignore les gabarits d’interpolation', () => {
     // Le gabarit est construit par concaténation : le test porte sur la valeur produite, pas sur
     // une chaîne de modèle JavaScript.
     const gabarit = `DATABASE_URL=postgresql://app:$` + '{DB_PASSWORD}@host:5432/db';
@@ -114,7 +114,7 @@ describe('non-valeurs : ne pas signaler du bruit', () => {
     expect(rulesOf('password = {mot_de_passe_du_client}').size).toBe(0);
   });
 
-  it('ignore un mot de passe masqué', () => {
+  it('I-31 : ignore un mot de passe masqué', () => {
     expect(rulesOf(`${'postgres'}://user:${'***'}@host:5432/db`).size).toBe(0);
   });
 });

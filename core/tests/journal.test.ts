@@ -109,7 +109,7 @@ describe('journal chaîné — preuves', () => {
     expect(report.issues[0]?.code).toBe('MISSING');
   });
 
-  it('détecte une altération du contenu (HASH_MISMATCH)', async () => {
+  it('I-27 : détecte une altération du contenu (HASH_MISMATCH)', async () => {
     const path = evidencePath();
     const store = new EvidenceStore(path);
     await recordEvidence(store, 'opération-1');
@@ -125,7 +125,7 @@ describe('journal chaîné — preuves', () => {
     expect(report.issues.some((issue) => issue.code === 'HASH_MISMATCH')).toBe(true);
   });
 
-  it('détecte la suppression d’un maillon (BROKEN_LINK)', async () => {
+  it('I-27 : détecte la suppression d’un maillon (BROKEN_LINK)', async () => {
     const path = evidencePath();
     const store = new EvidenceStore(path);
     for (let index = 0; index < 3; index += 1) {
@@ -139,7 +139,7 @@ describe('journal chaîné — preuves', () => {
     expect(report.issues.some((issue) => issue.code === 'BROKEN_LINK')).toBe(true);
   });
 
-  it('détecte le réordonnancement des maillons', async () => {
+  it('I-27 : détecte le réordonnancement des maillons', async () => {
     const path = evidencePath();
     const store = new EvidenceStore(path);
     for (let index = 0; index < 3; index += 1) {
@@ -155,7 +155,7 @@ describe('journal chaîné — preuves', () => {
     expect((await store.verify()).ok).toBe(false);
   });
 
-  it('caviarde un secret avant écriture', async () => {
+  it('I-29 : caviarde un secret avant écriture', async () => {
     const token = `gh${'p_'}D1e2F3g4H5i6J7k8L9m0N1o2P3q4R5s6T7u8`;
     const store = new EvidenceStore(evidencePath());
     const record = await store.record('push', OperationStatus.Executed, {
@@ -230,7 +230,7 @@ describe('journal chaîné — preuves', () => {
     expect(await store.count()).toBe(0);
   });
 
-  it('ne réécrit jamais : seul `append` existe et le fichier ne fait que croître', async () => {
+  it('I-28 : ne réécrit jamais — seul `append` existe et le fichier ne fait que croître', async () => {
     const path = evidencePath();
     const store = new EvidenceStore(path);
     await recordEvidence(store, 'opération-1');
@@ -283,7 +283,7 @@ describe('journal chaîné — audit', () => {
     expect(report.count).toBe(4);
   });
 
-  it('détecte un saut de séquence', async () => {
+  it('I-27 : détecte un saut de séquence', async () => {
     const path = auditPath();
     const ledger = new AuditLedger(path);
     for (let index = 0; index < 3; index += 1) {
@@ -298,7 +298,7 @@ describe('journal chaîné — audit', () => {
     expect(codes.has('BROKEN_LINK') || codes.has('SEQUENCE_GAP')).toBe(true);
   });
 
-  it('détecte une altération du résultat consigné', async () => {
+  it('I-27 : détecte une altération du résultat consigné', async () => {
     const path = auditPath();
     const ledger = new AuditLedger(path);
     await recordAudit(ledger, 'action-1');
@@ -335,7 +335,7 @@ describe('journal chaîné — audit', () => {
     expect(record.tenant_id).toBe('tenant-a');
   });
 
-  it('caviarde un secret dans l’audit', async () => {
+  it('I-29 : caviarde un secret dans l’audit', async () => {
     const token = `gh${'p_'}E1f2G3h4I5j6K7l8M9n0O1p2Q3r4S5t6U7v8`;
     const ledger = new AuditLedger(auditPath());
     const record = await ledger.recordAction({
