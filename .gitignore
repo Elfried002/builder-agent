@@ -27,6 +27,13 @@ dist/
 htmlcov/
 coverage.xml
 
+# Node.js / TypeScript (Core)
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+.vitest/
+
 # Sorties de vérification CodiDev (générées, reproductibles)
 var/
 artifacts/
