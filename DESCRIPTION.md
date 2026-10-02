@@ -267,5 +267,6 @@ codidev/
   bord si l'on veut un registre propre.
 - Rappel de contrat : une clé d'enregistrement n'ouvre **que** `/enroll` — toute validation par
   une route de lecture produit un faux `401`.
-- Le dépôt a été renommé en place ; le **nom du dépôt GitHub** reste `builder-agent` tant qu'il
-  n'est pas renommé côté hébergeur (cela change l'URL de clone : décision à confirmer).
+- Le dépôt Git **et** le nom du dépôt GitHub sont désormais `codidev`
+  (`https://github.com/Elfried002/codidev`) ; l'ancienne URL `builder-agent` redirige. Pour un
+  clone existant : `git remote set-url origin https://github.com/Elfried002/codidev.git`.

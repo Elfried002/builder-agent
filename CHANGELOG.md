@@ -15,6 +15,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · versionnage
   `POST /api/v1/agents/register` (route jamais exposée par le serveur) au contrat **vérifié**
   `POST /api/v1/agents/enroll` avec `Authorization: Bearer <clé d'enregistrement>`,
   `requested_name` obligatoire et traitement explicite de `401 / 409 / 429 / 503`.
+- **Renommage du dépôt GitHub** : `Elfried002/builder-agent` → `Elfried002/codidev` (l'ancienne
+  URL redirige ; pour un clone existant : `git remote set-url origin
+  https://github.com/Elfried002/codidev.git`). Description du dépôt mise à jour pour nommer
+  l'agent.
 
 ### Ajouté
 - `SOUL.md` (nature, vertus, interdits de langage) · `AGENT_SPEC.md` (spécification complète) ·

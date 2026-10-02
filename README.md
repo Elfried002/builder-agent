@@ -7,6 +7,12 @@ Ce dépôt est la **source de vérité** de l'agent : sa définition exécutable
 système), sa bibliothèque de compétences normative, sa gouvernance, et les scripts
 d'enregistrement / vérification sur un orchestrateur.
 
+- Dépôt : `https://github.com/Elfried002/codidev` (l'ancienne URL `builder-agent` redirige ;
+  pour un clone existant : `git remote set-url origin https://github.com/Elfried002/codidev.git`)
+- Version : `3.0.0` — renommage Builder Agent → CodiDev, voir [`CHANGELOG.md`](CHANGELOG.md)
+- Règles opposables : [`SOUL.md`](SOUL.md) · [`AGENT_SPEC.md`](AGENT_SPEC.md) · [`SKILL.md`](SKILL.md)
+- Description complète et état vérifié : [`DESCRIPTION.md`](DESCRIPTION.md)
+
 ---
 
 ## 1. Identité
