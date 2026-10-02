@@ -116,12 +116,13 @@ def test_la_definition_historique_est_preservee(repo_root: Path) -> None:
 
 
 def test_le_core_est_autonome_dans_core(core_root: Path, repo_root: Path) -> None:
-    """Le cœur est un paquet autonome, intégrable tel quel dans le projet final."""
+    """Le cœur Python est un paquet autonome, pendant la migration vers TypeScript."""
     assert (core_root / "pyproject.toml").is_file()
     assert (core_root / "uv.lock").is_file()
-    assert (core_root / "LICENSE").is_file()
     assert (core_root / "src" / "codidev" / "__init__.py").is_file()
     assert (core_root / "tests" / "test_contracts.py").is_file()
+    # Les contrats sont partagés et neutres : ils vivent hors des implémentations.
+    assert (repo_root / "core" / "schemas" / "task.json").is_file()
     # Aucun fichier de code du cœur ne traîne à la racine du dépôt : la racine est réservée au
     # projet dans son ensemble (documentation, historique, emplacements plateforme).
     assert not (repo_root / "src").exists()

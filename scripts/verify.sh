@@ -15,7 +15,7 @@ set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CODI_VENV_DIR="${CODI_VENV_DIR:-$HOME/.local/share/codidev/venv}"
 CODI_ARTIFACTS="${CODI_ARTIFACTS:-$HOME/.local/share/codidev/artifacts}"
-CORE_DIR="${REPO_ROOT}/core"
+CORE_DIR="${REPO_ROOT}/core/python"   # cœur Python (migration en cours)
 CODI="${CODI_VENV_DIR}/bin/codidev"
 PYTEST="${CODI_VENV_DIR}/bin/pytest"
 RUFF="${CODI_VENV_DIR}/bin/ruff"

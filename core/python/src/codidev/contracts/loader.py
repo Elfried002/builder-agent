@@ -17,7 +17,25 @@ from referencing.jsonschema import DRAFT202012
 
 from codidev.errors import ContractError
 
-SCHEMA_DIR: Path = Path(__file__).resolve().parent / "schemas"
+
+def _find_schema_dir() -> Path:
+    """Localise le répertoire des contrats, désormais neutre et partagé par les implémentations.
+
+    Les schémas ne vivent plus dans le paquet : ils sont la source de vérité commune du dépôt
+    (`core/schemas/`), afin qu'une seconde implémentation puisse valider exactement les mêmes
+    documents. La recherche remonte l'arborescence plutôt que de compter sur une profondeur fixe.
+    """
+    local = Path(__file__).resolve().parent / "schemas"
+    if local.is_dir() and (local / "task.json").is_file():
+        return local
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "schemas"
+        if (candidate / "task.json").is_file():
+            return candidate
+    raise ContractError("répertoire des contrats introuvable", searched_from=str(Path(__file__)))
+
+
+SCHEMA_DIR: Path = _find_schema_dir()
 SCHEMA_BASE_URI: str = "https://codidev.local/schemas/"
 
 

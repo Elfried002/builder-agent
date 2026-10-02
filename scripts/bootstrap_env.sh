@@ -10,7 +10,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CORE_DIR="${REPO_ROOT}/core"
+CORE_DIR="${REPO_ROOT}/core/python"   # cœur Python (migration en cours vers TypeScript)
 CODI_UV_BIN="${CODI_UV_BIN:-$HOME/.local/bin/uv}"
 CODI_VENV_DIR="${CODI_VENV_DIR:-$HOME/.local/share/codidev/venv}"
 CODI_PYTHON_VERSION="${CODI_PYTHON_VERSION:-3.12}"
