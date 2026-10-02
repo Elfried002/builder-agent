@@ -3,6 +3,58 @@
 Toutes les modifications notables de ce dépôt sont consignées ici.
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versionnage sémantique.
 
+## [0.2.0] — Phase 1 : Agent Core
+
+Construction du cerveau de CodiDev : contexte, planification, décision, tâches, coordination.
+Le cœur reste du **code** — aucune API, aucun service (ADR-0009).
+
+### Ajouté
+
+- **Context Engine** (`codidev.context`) : 9 couches de contexte, provenance obligatoire,
+  classification de confiance (`TRUSTED`/`VERIFIED`/`UNVERIFIED`/`UNTRUSTED`), rendu déterministe
+  exposant couche, confiance et source, et **isolation tenant vérifiée à l'insertion** : un
+  élément d'un autre tenant est refusé, un élément tenant-scopé sans tenant aussi.
+- **Planner** (`codidev.planner`) : plan versionné (objectif, exigences, hypothèses, dépendances,
+  étapes ordonnées, risques, permissions, critères de vérification, rollback). Invariants
+  contrôlés par code : ordre contigu, dépendances antérieures existantes, critère de vérification
+  par étape, rollback obligatoire pour les étapes destructives/déploiement, permissions dérivées
+  des étapes. Révision = nouvelle version qui déclare celle qu'elle remplace, sans réécriture.
+- **Decision Engine** (`codidev.decision`) : options examinées, sélection déterministe (risque le
+  plus faible, puis réversibilité), motifs de rejet pour chaque option écartée, politique
+  autoritaire — un verdict `DENY` interdit toute sélection — et obligation `approval:human-gate`
+  dès qu'une approbation est requise ou qu'une classe de risque l'impose.
+- **Task Engine** (`codidev.task`) : machine à états adossée à la table canonique, historique
+  observable, refus des transitions illégales, **vérification réelle obligatoire** avant
+  `VERIFIED`, et `COMPLETED` inatteignable sans `VERIFIED` dans l'historique.
+- **Agent Core** (`codidev.agent`) : `analyze` → `plan` → `decide` → tâche, avec `Request`
+  caviardée, analyse d'intention **structurée** (les signaux manquants deviennent des questions
+  ouvertes, jamais des suppositions) et journalisation complète dans les preuves et l'audit.
+- **4 contrats** supplémentaires : `intent`, `context_bundle`, `plan`, `decision` (13 au total).
+
+### Frontière explicite
+
+- `AgentCore.run()` s'arrête à la **frontière d'exécution** : statut `NOT_EXECUTED`, tâche gelée
+  à `PROPOSED`, `WAITING_FOR_USER` ou `BLOCKED` selon la politique. Aucun outil n'est exécuté et
+  aucune exécution n'est revendiquée : l'Execution Engine appartient à une phase ultérieure.
+- Le cœur ne référence aucun emplacement de plateforme ; un test le vérifie (ADR-0009).
+
+### Modifié
+
+- **Structure du dépôt** : le cœur devient un paquet autonome sous `core/`
+  (`core/pyproject.toml`, `core/uv.lock`, `core/src/codidev/`, `core/tests/`, `core/LICENSE`,
+  `core/README.md`), installable indépendamment. Les scripts de projet restent à la racine et
+  opèrent sur `core/`.
+
+### Documentation
+
+- `docs/CORE_PLATFORM_BOUNDARY.md` : frontière cœur / plateforme, surfaces de contact, et
+  **décisions d'intégration en attente** (traversée de frontière de langage, persistance des
+  journaux, authentification, propriété de l'approbation).
+- `docs/adr/ADR-0009-coeur-paquet-logiciel-et-frontiere-plateforme.md`
+- `docs/PHASE_1_REPORT.md` : preuves d'exécution de la phase.
+
+---
+
 ## [0.1.0] — Phase 0 : Foundation
 
 Première phase de construction du cœur CodiDev, conforme à

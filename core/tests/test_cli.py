@@ -20,7 +20,7 @@ def test_version(capsys: pytest.CaptureFixture[str]) -> None:
 def test_contracts_list(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["contracts", "list"]) == 0
     sortie = capsys.readouterr().out
-    assert "9 contrats disponibles" in sortie
+    assert "13 contrats disponibles" in sortie
     assert "evidence" in sortie
 
 

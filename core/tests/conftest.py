@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import shutil
+import subprocess
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -32,8 +34,27 @@ def ledger(audit_path: Path) -> AuditLedger:
 
 
 @pytest.fixture
-def repo_root() -> Path:
+def core_root() -> Path:
+    """Racine du cœur : le paquet `codidev`, ses contrats et ses tests."""
     return Path(__file__).resolve().parent.parent
+
+
+@pytest.fixture
+def repo_root() -> Path:
+    """Racine du dépôt Git : cœur, documentation, historique et emplacements plateforme."""
+    core = Path(__file__).resolve().parent.parent
+    git = shutil.which("git")
+    if git is not None:
+        result = subprocess.run(  # noqa: S603 — argv fixe, sans shell, aucun entrant externe
+            [git, "rev-parse", "--show-toplevel"],
+            cwd=core,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return Path(result.stdout.strip())
+    return core.parent
 
 
 @pytest.fixture

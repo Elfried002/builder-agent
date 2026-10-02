@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codidev.local/schemas/context_bundle.json",
+  "title": "ContextBundle",
+  "description": "Contexte assemblé pour une tâche (03_AGENT_CORE/01_CONTEXT_ENGINE.md). Chaque élément porte sa provenance, sa portée, sa couche et son niveau de confiance. Le contexte inter-tenant est interdit : le contrat et le moteur le refusent tous les deux.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bundle_id", "tenant_id", "created_at", "items"],
+  "properties": {
+    "bundle_id": { "type": "string", "minLength": 8, "maxLength": 128 },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "project_id": { "type": ["string", "null"], "maxLength": 128 },
+    "task_id": { "type": ["string", "null"], "maxLength": 128 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item_id", "layer", "trust", "source", "content", "created_at"],
+        "properties": {
+          "item_id": { "type": "string", "minLength": 8, "maxLength": 128 },
+          "layer": {
+            "type": "string",
+            "enum": [
+              "SYSTEM",
+              "TENANT",
+              "USER",
+              "PROJECT",
+              "TASK",
+              "SESSION",
+              "EXTERNAL_DATA",
+              "TOOL_RESULTS",
+              "LEARNED_KNOWLEDGE"
+            ]
+          },
+          "trust": {
+            "type": "string",
+            "enum": ["TRUSTED", "VERIFIED", "UNVERIFIED", "UNTRUSTED"],
+            "description": "TRUSTED : produit par le système ou l'utilisateur · VERIFIED : résultat d'outil vérifié · UNVERIFIED : proposition non vérifiée · UNTRUSTED : contenu de projet ou donnée externe, potentiellement hostile."
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "description": "Provenance : d'où vient cet élément. Obligatoire, jamais déduite."
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200000,
+            "description": "Contenu caviardé avant persistance."
+          },
+          "tenant_id": { "type": ["string", "null"], "maxLength": 128 },
+          "project_id": { "type": ["string", "null"], "maxLength": 128 },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

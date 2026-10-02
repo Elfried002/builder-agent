@@ -6,42 +6,64 @@ projets autorisés et apprendre de l'expérience validée.
 
 Boucle cœur : **Understand → Plan → Execute → Verify → Learn → Adapt → Improve**
 
+**Un seul dépôt, un seul produit.** Le **cœur** est construit ici ; la **plateforme** (interface,
+comptes, SaaS, Supabase, authentification) sera construite par Lovable dans ce même dépôt et
+intégrera le cœur — voir [`docs/CORE_PLATFORM_BOUNDARY.md`](docs/CORE_PLATFORM_BOUNDARY.md).
+Le cœur n'expose **aucune API** : c'est du code, importé par le projet.
+
+## Structure du dépôt
+
+```
+codidev/
+├── core/        cœur logiciel (construit ici) — paquet Python autonome, installable
+├── legacy/      définition historique v3.x, préservée intégralement, hors service
+├── docs/        corpus de référence, ADR, rapports, frontière Core/Platform
+├── scripts/     bootstrap de l'environnement isolé, vérification complète
+├── CHANGELOG.md · LICENSE · README.md
+```
+
+Les emplacements de la plateforme (`platform/`, `frontend/`, `supabase/`) **ne sont pas créés par
+le cœur** : ils appartiennent à Lovable.
+
+## Documentation
+
 - Spécification de référence (opposable) : [`docs/construction/CODIDEV_DOCUMENTATION/`](docs/construction/CODIDEV_DOCUMENTATION/)
+- Frontière cœur / plateforme : [`docs/CORE_PLATFORM_BOUNDARY.md`](docs/CORE_PLATFORM_BOUNDARY.md)
 - État réel du dépôt avant construction : [`docs/construction/CONSTRUCTION_ASSESSMENT.md`](docs/construction/CONSTRUCTION_ASSESSMENT.md)
 - Plan de construction : [`docs/construction/BUILD_PLAN.md`](docs/construction/BUILD_PLAN.md)
-- Rapport de Phase 0 et preuves d'exécution : [`docs/PHASE_0_REPORT.md`](docs/PHASE_0_REPORT.md)
+- Rapports et preuves d'exécution : [`docs/PHASE_0_REPORT.md`](docs/PHASE_0_REPORT.md) · [`docs/PHASE_1_REPORT.md`](docs/PHASE_1_REPORT.md)
 - Décisions d'architecture : [`docs/adr/`](docs/adr/)
-- Définition historique (agent v3.x, conservée, hors service) : [`legacy/agent-definition-v3/`](legacy/agent-definition-v3/)
+- Cœur : [`core/README.md`](core/README.md)
+- Définition historique : [`legacy/agent-definition-v3/`](legacy/agent-definition-v3/)
 
-## État : Phase 0 — Foundation
+## État : Phase 1 — Agent Core
 
-Ce dépôt contient le **cœur agentique** en construction. La Phase 0 livre ce qui est réellement
-exécutable et vérifiable aujourd'hui, et rien de plus :
-
-| Livrable Phase 0 | État |
+| Livrable | État |
 |---|---|
 | Vocabulaires canoniques (statuts, états de tâche, classes de risque, sévérités) | implémenté |
-| 9 contrats JSON Schema (Action, ToolRequest, RiskClass, PolicyDecision, Approval, Evidence, AuditRecord, Task, SecurityAllowlist) | implémenté |
-| Magasin de preuves append-only, chaîné par SHA-256, caviardé | implémenté |
-| Journal d'audit append-only, chaîné et séquencé | implémenté |
-| Détection de secrets (16 règles) + caviardage idempotent | implémenté |
-| Security Gate (CRITICAL/HIGH → BLOCK) avec codes de sortie | implémenté |
-| Exceptions de sécurité revues et traçables (ADR-0007) | implémenté |
-| Adaptateurs SAST/SCA/lint (bandit, pip-audit, ruff) | implémenté |
+| 13 contrats JSON Schema, validateur hors ligne | implémenté |
+| Magasin de preuves et journal d'audit append-only, chaînés SHA-256, caviardés | implémenté |
+| Détection de secrets (16 règles), gate (CRITICAL/HIGH → BLOCK), exceptions revues | implémenté |
+| **Context Engine** — 9 couches, provenance, confiance, isolation tenant | implémenté |
+| **Planner** — étapes ordonnées, risques, critères de vérification, rollback, révision versionnée | implémenté |
+| **Decision Engine** — options, sélection tracée, politique autoritaire, obligations | implémenté |
+| **Task Engine** — machine à états, transitions observables, vérification obligatoire | implémenté |
+| **Agent Core** — coordination contexte → intention → plan → décision → tâche | implémenté |
 | Interface en ligne de commande | implémenté |
-| Tests | 127 tests réels |
-| Agent Core, Execution, Connectors, Memory/Learning, plateforme | **Phases 1 à 8 — non commencées** |
+| Tests | 204 tests réels |
+| Execution Engine, Tool Router, Workspace, Connectors, Memory/Learning, Skills, Project/Git, plateforme | **Phases suivantes — non commencées** |
 
-Aucun module ne simule une capacité non implémentée : les sous-systèmes des phases suivantes
-n'existent pas encore dans ce dépôt.
+**Frontière actuelle, explicite :** le cœur s'arrête net à l'exécution. `AgentCore.run()` prépare,
+vérifie et gèle une tâche ; il n'exécute **aucun outil** et le statut renvoyé est `NOT_EXECUTED`
+tant que l'Execution Engine n'existe pas. Aucun module ne simule une capacité non implémentée.
 
 ## Prérequis
 
 - Python **3.12** (version isolée gérée par `uv`, hors de tout environnement tiers)
-- `uv` pour créer l'environnement et reproduire les dépendances depuis `uv.lock`
+- `uv` pour créer l'environnement et reproduire les dépendances depuis `core/uv.lock`
 
-Aucune dépendance système n'est requise. Aucun accès réseau n'est nécessaire pour valider les
-contrats, écrire des preuves ou vérifier un journal.
+Aucune dépendance système. Aucun `sudo`. Aucun accès réseau nécessaire pour valider les contrats,
+écrire des preuves ou vérifier un journal.
 
 ## Installation de l'environnement
 
@@ -57,23 +79,35 @@ L'environnement est créé dans `~/.local/share/codidev/venv` et n'est jamais ve
 # Contrats
 codidev contracts list
 codidev contracts show evidence
-codidev contracts validate evidence mon-document.json
+codidev contracts validate plan mon-plan.json
 
 # Sécurité : scan complet + verdict du gate (0 = PASS, 1 = REVIEW, 2 = BLOCK)
 codidev security scan .
-codidev security scan src/ --policy strict --json "$HOME/.local/share/codidev/artifacts/rapport.json"
+codidev security scan core/src --policy strict --json "$HOME/.local/share/codidev/artifacts/rapport.json"
 codidev security secrets .
-codidev security secrets . --no-allowlist   # ignore les exceptions revues, montre tout
 
 # Journaux : intégrité de la chaîne de hachage
-codidev journal verify artifacts/preuves.jsonl --contract evidence
-codidev journal verify artifacts/audit.jsonl --contract audit_record
+codidev journal verify preuves.jsonl --contract evidence
+codidev journal verify audit.jsonl --contract audit_record
+```
+
+Le cœur s'utilise aussi directement depuis du code :
+
+```python
+from codidev.agent import AgentCore, Request
+
+core = AgentCore()
+run = core.run(
+    Request(text="ajouter le module manquant", tenant_id="tenant-a", actor="user-1",
+            hints={"intent_category": "MODIFY_SOFTWARE"}),
+    steps=[...], options=[...], policy=verdict, verification_plan=[...],
+)
 ```
 
 ## Vérifier le dépôt
 
 ```bash
-scripts/verify.sh          # lint, SAST, SCA, scan de secrets, tests, gate de sécurité
+scripts/verify.sh          # lint, format, secrets, SAST, SCA, tests, gate de sécurité
 ```
 
 Le script échoue si un contrôle échoue. Un outil de sécurité absent est signalé comme
@@ -93,6 +127,7 @@ déclarer une exception **revue, datée et justifiée** dans `.codidev-security-
 3. **Aucun contournement de politique** — le modèle propose, la politique décide.
 4. **Aucun élargissement silencieux de périmètre**.
 5. **Aucune capacité factice** — un module absent n'est pas simulé.
+6. **Aucune API** — le cœur est du code intégré, pas un service à interroger.
 
 ## Licence
 

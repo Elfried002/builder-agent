@@ -115,11 +115,17 @@ def test_la_definition_historique_est_preservee(repo_root: Path) -> None:
     assert len(list((legacy / "skills").glob("*/SKILL.md"))) == 15
 
 
-def test_le_coeur_est_a_la_racine(repo_root: Path) -> None:
-    assert (repo_root / "pyproject.toml").is_file()
-    assert (repo_root / "uv.lock").is_file()
-    assert (repo_root / "src" / "codidev" / "__init__.py").is_file()
-    assert (repo_root / "tests" / "test_contracts.py").is_file()
+def test_le_core_est_autonome_dans_core(core_root: Path, repo_root: Path) -> None:
+    """Le cœur est un paquet autonome, intégrable tel quel dans le projet final."""
+    assert (core_root / "pyproject.toml").is_file()
+    assert (core_root / "uv.lock").is_file()
+    assert (core_root / "LICENSE").is_file()
+    assert (core_root / "src" / "codidev" / "__init__.py").is_file()
+    assert (core_root / "tests" / "test_contracts.py").is_file()
+    # Aucun fichier de code du cœur ne traîne à la racine du dépôt : la racine est réservée au
+    # projet dans son ensemble (documentation, historique, emplacements plateforme).
+    assert not (repo_root / "src").exists()
+    assert not (repo_root / "pyproject.toml").exists()
 
 
 def test_le_corpus_de_reference_est_versionne(repo_root: Path) -> None:
@@ -129,8 +135,8 @@ def test_le_corpus_de_reference_est_versionne(repo_root: Path) -> None:
     assert (corpus / "MANIFEST.md").is_file()
 
 
-def test_aucun_couplage_runtime_interdit_dans_src(repo_root: Path) -> None:
-    src = repo_root / "src"
+def test_aucun_couplage_runtime_interdit_dans_src(core_root: Path, repo_root: Path) -> None:
+    src = core_root / "src"
     trouves: list[str] = []
     for chemin in sorted(src.rglob("*.py")):
         contenu = chemin.read_text(encoding="utf-8").lower()
@@ -140,14 +146,35 @@ def test_aucun_couplage_runtime_interdit_dans_src(repo_root: Path) -> None:
     assert trouves == [], f"couplage interdit détecté : {trouves}"
 
 
-def test_le_core_nimporte_aucun_runtime_externe(repo_root: Path) -> None:
+def test_le_core_ne_reference_aucun_emplacement_de_plateforme(core_root: Path) -> None:
+    """Le cœur ignore la plateforme (ADR-0009) : il ne la nomme, ne l'importe, ne la suppose pas.
+
+    Le contrôle porte sur les références du cœur, pas sur l'existence des dossiers : la plateforme
+    sera construite plus tard dans ce même dépôt.
+    """
+    # Le contrôle porte sur les dépendances réelles — imports et chemins — et non sur une simple
+    # mention : une règle de détection de secret nommée d'après un fournisseur n'est pas un
+    # couplage.
+    import re
+
+    importation = re.compile(r"^\s*(?:import|from)\s+(platform|frontend|supabase|lovable)\b")
+    chemin_plateforme = re.compile(r"[\"'](?:\.\./)*(?:platform|frontend|supabase|lovable)/")
+    trouves: list[str] = []
+    for fichier in sorted((core_root / "src").rglob("*.py")):
+        for numero, ligne in enumerate(fichier.read_text(encoding="utf-8").splitlines(), 1):
+            if importation.search(ligne) or chemin_plateforme.search(ligne):
+                trouves.append(f"{fichier.relative_to(core_root)}:{numero}")
+    assert trouves == [], f"couplage à un emplacement de plateforme dans le cœur : {trouves}"
+
+
+def test_le_core_nimporte_aucun_runtime_externe(core_root: Path) -> None:
     """Le cœur ne dépend que de la bibliothèque standard et de ses deux dépendances déclarées.
 
     ADR-0002 : aucune dépendance runtime à l'environnement de construction.
     """
     import sys
 
-    src = repo_root / "src"
+    src = core_root / "src"
     autorisees = set(sys.stdlib_module_names) | {"codidev", "jsonschema", "referencing"}
     importees: set[str] = set()
     for chemin in sorted(src.rglob("*.py")):

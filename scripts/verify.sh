@@ -15,6 +15,7 @@ set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CODI_VENV_DIR="${CODI_VENV_DIR:-$HOME/.local/share/codidev/venv}"
 CODI_ARTIFACTS="${CODI_ARTIFACTS:-$HOME/.local/share/codidev/artifacts}"
+CORE_DIR="${REPO_ROOT}/core"
 CODI="${CODI_VENV_DIR}/bin/codidev"
 PYTEST="${CODI_VENV_DIR}/bin/pytest"
 RUFF="${CODI_VENV_DIR}/bin/ruff"
@@ -30,12 +31,12 @@ fi
 mkdir -p "$CODI_ARTIFACTS"
 
 say "lint (ruff check)"
-if ! "$RUFF" check "$REPO_ROOT/src" "$REPO_ROOT/tests"; then
+if ! "$RUFF" check "$CORE_DIR/src" "$CORE_DIR/tests"; then
   EXIT_CODE=2
 fi
 
 say "format (ruff format --check)"
-if ! "$RUFF" format --check "$REPO_ROOT/src" "$REPO_ROOT/tests"; then
+if ! "$RUFF" format --check "$CORE_DIR/src" "$CORE_DIR/tests"; then
   EXIT_CODE=2
 fi
 
@@ -52,7 +53,7 @@ say "contrats (auto-contrôle des schémas)"
 "$CODI" contracts list
 
 say "tests (pytest)"
-if ! "$PYTEST" -q; then
+if ! (cd "$CORE_DIR" && "$PYTEST" -q); then
   EXIT_CODE=2
 fi
 

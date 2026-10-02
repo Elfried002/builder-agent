@@ -69,3 +69,36 @@ class CapabilityNotDeclaredError(CodiDevError):
     """Capacité non déclarée demandée : point ouvert, jamais d'élargissement silencieux."""
 
     status = OperationStatus.NOT_EXECUTED
+
+
+class ContextIsolationError(CodiDevError):
+    """Une règle d'isolation du contexte a été violée (tenant, provenance, portée)."""
+
+    status = OperationStatus.BLOCKED
+
+
+class PlanInvalidError(CodiDevError):
+    """Un plan ne satisfait pas ses invariants : ordre, dépendances, critères, rollback."""
+
+    status = OperationStatus.BLOCKED
+
+
+class TaskTransitionError(CodiDevError):
+    """Une transition de tâche interdite a été demandée."""
+
+    status = OperationStatus.BLOCKED
+
+
+class VerificationRequiredError(CodiDevError):
+    """Une étape exige une vérification réelle qui n'a pas été fournie."""
+
+    status = OperationStatus.BLOCKED
+
+
+class ExecutionNotAvailableError(CodiDevError):
+    """Le cœur a atteint la frontière d'exécution, qui n'est pas encore construite.
+
+    Statut `NOT_EXECUTED` : rien n'a été exécuté, et rien ne sera présenté comme exécuté.
+    """
+
+    status = OperationStatus.NOT_EXECUTED

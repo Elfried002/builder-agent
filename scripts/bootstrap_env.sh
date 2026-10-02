@@ -10,6 +10,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CORE_DIR="${REPO_ROOT}/core"
 CODI_UV_BIN="${CODI_UV_BIN:-$HOME/.local/bin/uv}"
 CODI_VENV_DIR="${CODI_VENV_DIR:-$HOME/.local/share/codidev/venv}"
 CODI_PYTHON_VERSION="${CODI_PYTHON_VERSION:-3.12}"
@@ -25,6 +26,7 @@ fi
 
 say "uv        : $("$CODI_UV_BIN" --version)"
 say "dépôt     : $REPO_ROOT"
+say "cœur      : $CORE_DIR"
 say "environnement : $CODI_VENV_DIR"
 
 say "→ installation de CPython ${CODI_PYTHON_VERSION} (géré par uv, hors environnement tiers)"
@@ -40,7 +42,7 @@ fi
 
 say "→ synchronisation depuis uv.lock (dépendances épinglées)"
 (
-  cd "$REPO_ROOT"
+  cd "$CORE_DIR"
   UV_PROJECT_ENVIRONMENT="$CODI_VENV_DIR" "$CODI_UV_BIN" sync --locked
 )
 

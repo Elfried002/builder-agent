@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codidev.local/schemas/intent.json",
+  "title": "IntentRecord",
+  "description": "Compréhension structurée d'une demande. L'intention est un artefact exposable : elle énonce ce qui a été compris, ce qui reste incertain et ce qui doit être clarifié — jamais un raisonnement privé (02_ARCHITECTURE/02_DECISION_FLOW.md).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["intent_id", "statement", "category", "confidence", "created_at"],
+  "properties": {
+    "intent_id": { "type": "string", "minLength": 8, "maxLength": 128 },
+    "statement": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000,
+      "description": "Énoncé de l'intention, caviardé avant persistance."
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "CREATE_SOFTWARE",
+        "MODIFY_SOFTWARE",
+        "ANALYZE",
+        "FIX",
+        "SECURE",
+        "TEST",
+        "DEPLOY",
+        "DOCUMENT",
+        "UNKNOWN"
+      ]
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "constraints": { "type": "array", "items": { "type": "string", "maxLength": 1000 } },
+    "sources": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 2048 },
+      "description": "Origine de chaque élément retenu : la traçabilité est obligatoire."
+    },
+    "open_questions": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 1000 },
+      "description": "Questions dont la réponse change le travail. Une réponse absente devient une hypothèse explicite."
+    },
+    "assumptions": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 1000 },
+      "description": "Hypothèses retenues en l'absence de réponse ; jamais présentées comme des faits."
+    },
+    "tenant_id": { "type": ["string", "null"], "maxLength": 128 },
+    "project_id": { "type": ["string", "null"], "maxLength": 128 },
+    "request_id": { "type": ["string", "null"], "maxLength": 128 },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}
