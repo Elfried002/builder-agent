@@ -141,6 +141,40 @@ export class FileJournalSink implements JournalSink {
   }
 }
 
+/**
+ * Support de journalisation en mémoire. Utile aux tests isolés et aux exécutions éphémères ;
+ * il respecte le même contrat que les autres supports (ajout seul, ordre d'écriture conservé).
+ */
+export class MemoryJournalSink implements JournalSink {
+  readonly location: string;
+  readonly #lines: string[];
+
+  constructor(location = 'memory://journal', initialLines: readonly string[] = []) {
+    this.location = location;
+    this.#lines = [...initialLines];
+  }
+
+  async exists(): Promise<boolean> {
+    return this.#lines.length > 0;
+  }
+
+  async *readLines(): AsyncIterable<string> {
+    for (const line of [...this.#lines]) {
+      const trimmed = line.trim();
+      if (trimmed.length > 0) yield trimmed;
+    }
+  }
+
+  async appendLine(line: string): Promise<void> {
+    this.#lines.push(line);
+  }
+
+  /** Copie des lignes écrites, dans l'ordre. */
+  lines(): readonly string[] {
+    return [...this.#lines];
+  }
+}
+
 /** Options de construction d'un journal chaîné. */
 export interface ChainedJournalOptions {
   readonly contract: ContractName;

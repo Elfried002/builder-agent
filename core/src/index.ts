@@ -27,7 +27,9 @@ import { Request, type RequestInit } from './agent/request.js';
 import { AuditLedger } from './audit.js';
 import { ContextEngine } from './context/engine.js';
 import { DecisionEngine } from './decision/engine.js';
+import { CodiDevError } from './errors.js';
 import { EvidenceStore } from './evidence.js';
+import type { JournalSink } from './journal.js';
 import { DeepSeekProvider } from './llm/deepseek.js';
 import { MockLLMProvider, type MockStep } from './llm/mock.js';
 import {
@@ -41,8 +43,15 @@ export const EVIDENCE_FILENAME = 'evidence.jsonl';
 export const AUDIT_FILENAME = 'audit.jsonl';
 
 export interface CodiDevCoreConfig {
-  /** Répertoire des journaux du cœur (`evidence.jsonl`, `audit.jsonl`). */
-  readonly workspaceDir: string;
+  /**
+   * Répertoire des journaux du cœur (`evidence.jsonl`, `audit.jsonl`). Requis pour tout journal
+   * dont le support n'est pas fourni explicitement.
+   */
+  readonly workspaceDir?: string;
+  /** Support du journal des preuves ; par défaut un fichier dans `workspaceDir`. */
+  readonly evidenceSink?: JournalSink;
+  /** Support du journal d'audit ; par défaut un fichier dans `workspaceDir`. */
+  readonly auditSink?: JournalSink;
   /** Environnement d'exécution ; c'est là que réside la clé d'API du provider. */
   readonly env?: Readonly<Record<string, string | undefined>>;
   /** Configuration LLM explicite, prioritaire sur l'environnement. `null` désactive le LLM. */
@@ -52,19 +61,31 @@ export interface CodiDevCoreConfig {
   readonly defaultActor?: string;
 }
 
+function requireWorkspaceDir(config: CodiDevCoreConfig): string {
+  if (config.workspaceDir === undefined) {
+    throw new CodiDevError('workspaceDir requis pour un journal sans support explicite');
+  }
+  return config.workspaceDir;
+}
+
 /** Environnement d'exécution du cœur : briques assemblées, journaux ouverts, provider prêt. */
 export class CodiDevCore {
   readonly evidence: EvidenceStore;
   readonly audit: AuditLedger;
   readonly agent: AgentCore;
   readonly llm: LLMProvider | null;
+  /** Répertoire des journaux ; chaîne vide lorsque tous les supports sont fournis. */
   readonly workspaceDir: string;
 
   constructor(config: CodiDevCoreConfig) {
-    this.workspaceDir = config.workspaceDir;
+    this.workspaceDir = config.workspaceDir ?? '';
     const env = config.env ?? process.env;
-    this.evidence = new EvidenceStore(join(config.workspaceDir, EVIDENCE_FILENAME));
-    this.audit = new AuditLedger(join(config.workspaceDir, AUDIT_FILENAME));
+    this.evidence = new EvidenceStore(
+      config.evidenceSink ?? join(requireWorkspaceDir(config), EVIDENCE_FILENAME),
+    );
+    this.audit = new AuditLedger(
+      config.auditSink ?? join(requireWorkspaceDir(config), AUDIT_FILENAME),
+    );
 
     const llmConfig = config.llm === null ? null : (config.llm ?? loadLLMConfigFromEnv(env));
     if (llmConfig === null) {
@@ -121,15 +142,17 @@ export * from './agent/index.js';
 export { AuditLedger } from './audit.js';
 // Moteurs.
 export * from './context/engine.js';
-export type { ContractName } from './contracts.js';
+export type { ContractBundle, ContractName, ContractValidator } from './contracts.js';
 
 // Contrats et primitives de journalisation.
 export {
   CONTRACT_NAMES,
   contractPath,
+  createContractAjv,
   isValid,
   iterErrors,
   loadSchema,
+  registerContracts,
   SCHEMA_DIR,
   schemaEnum,
   schemaFiles,
@@ -146,7 +169,12 @@ export type {
   IntegrityReport,
   JournalSink,
 } from './journal.js';
-export { ChainedJournal, FileJournalSink, integrityReportToJson } from './journal.js';
+export {
+  ChainedJournal,
+  FileJournalSink,
+  integrityReportToJson,
+  MemoryJournalSink,
+} from './journal.js';
 // Couche LLM.
 export * from './llm/index.js';
 export * from './planner/planner.js';

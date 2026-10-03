@@ -3,6 +3,23 @@
 Toutes les modifications notables de ce dépôt sont consignées ici.
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versionnage sémantique.
 
+## [Non publié]
+
+### Ajouté
+
+- **Contrats injectables** : `registerContracts({ schemas, validators? })` fournit les contrats
+  sans lecture disque (runtimes hébergés sans système de fichiers). `createContractAjv(code?)`
+  expose l'instance Ajv du cœur pour produire des validateurs précompilés (Ajv standalone) hors
+  ligne, là où la génération de code à l'exécution est interdite.
+- **`MemoryJournalSink`** : support de journal en mémoire pour les tests isolés.
+- **`CodiDevCore`** accepte `evidenceSink` / `auditSink` (`JournalSink`). Sans eux, les journaux
+  restent des fichiers dans `workspaceDir` (comportement inchangé).
+
+### Modifié
+
+- `SCHEMA_DIR` ne lève plus d'erreur au chargement du module lorsqu'aucun répertoire de contrats
+  n'existe : il vaut `''` et la première lecture disque lève `ContractError`.
+
 ## [0.2.0] — Phase 1 : Agent Core
 
 Construction du cerveau de CodiDev : contexte, planification, décision, tâches, coordination.

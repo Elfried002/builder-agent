@@ -11,7 +11,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { Ajv as AjvInstance, ValidateFunction } from 'ajv';
+import type { Ajv as AjvInstance, ErrorObject } from 'ajv';
 // Les contrats sont en JSON Schema **2020-12** : le `Ajv` par défaut ne connaît que draft-07 et
 // refuserait d'enregistrer ces schémas. On utilise explicitement la classe du dialecte 2020-12.
 import Ajv2020Module from 'ajv/dist/2020.js';
@@ -64,22 +64,38 @@ export const SCHEMA_BASE_URI = 'https://codidev.local/schemas/';
  *
  * La remontée plutôt qu'un chemin fixe évite de dépendre de la profondeur de compilation
  * (`src/` en développement, `dist/` après construction) : le répertoire trouvé est le même.
+ *
+ * Sur un runtime sans système de fichiers (ex. : Worker hébergé), la recherche échoue sans lever
+ * d'erreur au chargement du module : les contrats sont alors fournis par `registerContracts`.
+ * Toute lecture disque ultérieure lève `ContractError`.
  */
-function findSchemaDir(): string {
-  let dir = dirname(fileURLToPath(import.meta.url));
-  for (let depth = 0; depth < 8; depth += 1) {
-    const candidate = join(dir, 'schemas');
-    if (existsSync(join(candidate, 'task.json'))) return candidate;
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
+function findSchemaDir(): string | undefined {
+  try {
+    let dir = dirname(fileURLToPath(import.meta.url));
+    for (let depth = 0; depth < 8; depth += 1) {
+      const candidate = join(dir, 'schemas');
+      if (existsSync(join(candidate, 'task.json'))) return candidate;
+      const parent = dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  } catch {
+    // Pas de système de fichiers exploitable : contrats injectés attendus.
   }
-  throw new ContractError('répertoire des contrats introuvable', {
-    context: { searchedFrom: fileURLToPath(import.meta.url) },
-  });
+  return undefined;
 }
 
-export const SCHEMA_DIR: string = findSchemaDir();
+/** Répertoire des contrats sur le disque ; chaîne vide s'il est introuvable. */
+export const SCHEMA_DIR: string = findSchemaDir() ?? '';
+
+function requireSchemaDir(): string {
+  if (SCHEMA_DIR === '') {
+    throw new ContractError('répertoire des contrats introuvable', {
+      context: { hint: 'fournir les contrats avec registerContracts()' },
+    });
+  }
+  return SCHEMA_DIR;
+}
 
 function assertKnown(name: string): ContractName {
   if (!(CONTRACT_NAMES as readonly string[]).includes(name)) {
@@ -92,12 +108,12 @@ function assertKnown(name: string): ContractName {
 
 /** Chemin du fichier de schéma d'un contrat. */
 export function contractPath(name: ContractName): string {
-  return join(SCHEMA_DIR, `${assertKnown(name)}.json`);
+  return join(requireSchemaDir(), `${assertKnown(name)}.json`);
 }
 
 /** Noms des contrats réellement présents sur le disque. */
 export function schemaFiles(): string[] {
-  return readdirSync(SCHEMA_DIR)
+  return readdirSync(requireSchemaDir())
     .filter((file) => file.endsWith('.json'))
     .sort();
 }
@@ -125,13 +141,17 @@ export function loadSchema(name: ContractName): Record<string, unknown> {
 
 let ajvInstance: AjvInstance | undefined;
 
-function ajv(): AjvInstance {
-  if (ajvInstance !== undefined) return ajvInstance;
+/**
+ * Instance Ajv chargée de tous les contrats. `code` est transmis tel quel à Ajv (ex. :
+ * `{ source: true, esm: true }` pour produire des validateurs précompilés).
+ */
+export function createContractAjv(code?: Record<string, unknown>): AjvInstance {
   const instance = new Ajv2020({
     allErrors: true,
     strict: false,
     allowUnionTypes: true,
     validateSchema: true,
+    ...(code === undefined ? {} : { code }),
   });
   addFormats(instance);
   for (const name of CONTRACT_NAMES) {
@@ -139,16 +159,65 @@ function ajv(): AjvInstance {
     const id = typeof schema.$id === 'string' ? schema.$id : `${SCHEMA_BASE_URI}${name}.json`;
     instance.addSchema(schema, id);
   }
-  ajvInstance = instance;
   return instance;
 }
 
-const validatorCache = new Map<ContractName, ValidateFunction>();
+function ajv(): AjvInstance {
+  if (ajvInstance === undefined) ajvInstance = createContractAjv();
+  return ajvInstance;
+}
 
-function validatorFor(name: ContractName): ValidateFunction {
+/**
+ * Validateur de contrat : même forme qu'une fonction Ajv (`ValidateFunction`), y compris un
+ * validateur précompilé hors ligne (Ajv « standalone ») pour les runtimes sans génération de code.
+ */
+export interface ContractValidator {
+  (document: unknown): boolean;
+  errors?: ErrorObject[] | null;
+}
+
+/** Contrats fournis par l'appelant, à la place de la lecture disque. */
+export interface ContractBundle {
+  /** Schéma de chacun des contrats de `CONTRACT_NAMES`. */
+  readonly schemas: Readonly<Record<ContractName, Record<string, unknown>>>;
+  /** Validateurs précompilés, optionnels ; sinon Ajv compile les schémas fournis. */
+  readonly validators?: Readonly<Partial<Record<ContractName, ContractValidator>>>;
+}
+
+const validatorCache = new Map<ContractName, ContractValidator>();
+const injectedValidators = new Map<ContractName, ContractValidator>();
+
+/**
+ * Fournit les contrats sans passer par le disque. Le contenu des contrats ne change pas : seule
+ * leur source change. Chaque contrat attendu doit être présent, sinon `ContractError`.
+ */
+export function registerContracts(bundle: ContractBundle): void {
+  for (const name of CONTRACT_NAMES) {
+    const schema: unknown = bundle.schemas[name];
+    if (schema === null || typeof schema !== 'object' || Array.isArray(schema)) {
+      throw new ContractError(`contrat manquant ou non-objet : ${name}`);
+    }
+  }
+  schemaCache.clear();
+  validatorCache.clear();
+  injectedValidators.clear();
+  ajvInstance = undefined;
+  for (const name of CONTRACT_NAMES) {
+    schemaCache.set(name, bundle.schemas[name]);
+    const validator = bundle.validators?.[name];
+    if (validator !== undefined) injectedValidators.set(name, validator);
+  }
+}
+
+function validatorFor(name: ContractName): ContractValidator {
   const known = assertKnown(name);
   const cached = validatorCache.get(known);
   if (cached !== undefined) return cached;
+  const injected = injectedValidators.get(known);
+  if (injected !== undefined) {
+    validatorCache.set(known, injected);
+    return injected;
+  }
   const id = `${SCHEMA_BASE_URI}${known}.json`;
   const compiled = ajv().getSchema(id) ?? ajv().compile(loadSchema(known));
   validatorCache.set(known, compiled);
